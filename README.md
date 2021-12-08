@@ -1,1 +1,1 @@
-# wlan-cloud-owls2-ui
+# wlan-cloud-owls-ui
