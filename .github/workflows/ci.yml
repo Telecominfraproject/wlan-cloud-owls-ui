@@ -5,13 +5,13 @@ on:
     paths-ignore:
       - '**.md'
     branches:
-      - main
+      - master
       - 'release/*'
     tags:
       - 'v*'
   pull_request:
     branches:
-      - main
+      - master
 
 defaults:
   run:
@@ -55,7 +55,7 @@ jobs:
         done
 
     - name: Log into Docker registry
-      if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/pull/') || github.ref == 'refs/heads/main'
+      if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/pull/') || github.ref == 'refs/heads/master'
       uses: docker/login-action@v1
       with:
         registry: ${{ env.DOCKER_REGISTRY_URL }}
@@ -63,6 +63,6 @@ jobs:
         password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
     - name: Push Docker images
-      if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/pull/') || github.ref == 'refs/heads/main'
+      if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/pull/') || github.ref == 'refs/heads/master'
       run: |
         docker images | grep ${{ env.DOCKER_REGISTRY_URL }}/owls-ui | awk -F ' ' '{print $1":"$2}' | xargs -I {} docker push {}

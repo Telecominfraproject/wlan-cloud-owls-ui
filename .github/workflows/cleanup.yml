@@ -3,7 +3,7 @@ name: Clean up PR Docker images
 on:
   pull_request:
     branches:
-      - main
+      - master
     types: [ closed ]
 
 defaults:
