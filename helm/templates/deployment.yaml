@@ -1,0 +1,92 @@
+{{- $root := . -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "owlsui.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "owlsui.name" . }}
+    helm.sh/chart: {{ include "owlsui.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "owlsui.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- with .Values.services.owlsui.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "owlsui.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- with .Values.services.owlsui.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if .Values.podAnnotations }}
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+    spec:
+
+      containers:
+
+        - name: owlsui
+          image: "{{ .Values.images.owlsui.repository }}:{{ .Values.images.owlsui.tag }}"
+          imagePullPolicy: {{ .Values.images.owlsui.pullPolicy }}
+
+          env:
+            - name: KUBERNETES_DEPLOYED
+              value: "{{ now }}"
+          {{- range $key, $value := .Values.public_env_variables }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+
+          ports:
+          {{- range $key, $value := .Values.services.owlsui.ports }}
+            - name: {{ $key }}
+              containerPort: {{ $value.targetPort }}
+              protocol: {{ $value.protocol }}
+          {{- end }}
+
+          {{- if .Values.checks.owlsui.liveness }}
+          livenessProbe:
+            {{- toYaml .Values.checks.owlsui.liveness | nindent 12 }}
+          {{- end }}
+          {{- if .Values.checks.owlsui.readiness }}
+          readinessProbe:
+            {{- toYaml .Values.checks.owlsui.readiness | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+      imagePullSecrets:
+      {{- range $image, $imageValue := .Values.images }}
+        {{- if $imageValue.regcred }}
+      - name: {{ include "owlsui.fullname" $root }}-{{ $image }}-regcred
+        {{- end }}
+      {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
