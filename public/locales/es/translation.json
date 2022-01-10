@@ -17,6 +17,7 @@
 		"blink": "Parpadeo",
 		"device_leds": "LED de dispositivo",
 		"execute_now": "¿Le gustaría establecer este patrón ahora?",
+		"explanation": "¿Qué patrón le gustaría establecer en este dispositivo durante 30 segundos?",
 		"pattern": "Elija el patrón que le gustaría usar:",
 		"set_leds": "Establecer LED",
 		"when_blink_leds": "¿Cuándo desea que los LED del dispositivo parpadeen?"
@@ -71,6 +72,7 @@
 		"date": "Fecha",
 		"day": "día",
 		"days": "días",
+		"default_map": "Mapa predeterminado",
 		"delete": "Borrar",
 		"delete_device": "Eliminar dispositivo",
 		"details": "Detalles",
@@ -147,12 +149,13 @@
 		"no_items": "No hay articulos",
 		"none": "Ninguna",
 		"not_connected": "No conectado",
-		"of_connected": "% de dispositivos",
+		"of_connected": "% de dispositivos conectados",
 		"off": "Apagado",
 		"on": "en",
 		"optional": "Opcional",
 		"overall_health": "Salud en general",
 		"password_policy": "Política de contraseñas",
+		"preferences": "Preferencias",
 		"preview": "Avance",
 		"program": "Programa",
 		"reason": "Razón",
@@ -176,6 +179,7 @@
 		"show_all": "Mostrar todo",
 		"socket_connection_closed": "¡Conexión cerrada!",
 		"start": "comienzo",
+		"status": "Estado",
 		"stop_editing": "Dejar de editar",
 		"submit": "Enviar",
 		"submitted": "Presentado",
@@ -272,6 +276,7 @@
 	"contact": {
 		"access_pin": "PIN de acceso",
 		"add_contact": "Agregar contacto",
+		"contact": "Contacto",
 		"create_contact": "Crear contacto",
 		"currently_selected_contact": "Contacto seleccionado actualmente: {{contact}}",
 		"delete": "¿Borrar contacto?",
@@ -321,13 +326,13 @@
 		"error_edit_blacklist": "Error al editar la lista negra: {{error}}",
 		"error_fetching_device": "Error al obtener la información del dispositivo: {{error}}",
 		"error_fetching_devices": "Error al recuperar dispositivos: {{error}}",
-		"health_explanation": "Salud de los dispositivos conectados",
-		"memory_explanation": "Memoria utilizada por dispositivos conectados",
+		"health_explanation": "Estado de los dispositivos conectados ((Dispositivos = 100% * 100 + Dispositivos> 90% * 95 + Dispositivos> 60% * 75 + Dispositivos <60% * 35) / Dispositivos conectados)",
+		"memory_explanation": "Cantidad de dispositivos conectados con la memoria correspondiente utilizada%",
 		"remove_from_blacklist": "ELIMINAR DE LA LISTA NEGRA",
 		"success_added_blacklist": "¡Dispositivo agregado exitosamente a la lista negra!",
 		"success_edit_blacklist": "Lista negra editada con éxito!",
 		"success_removed_blacklist": "¡Dispositivo eliminado con éxito de la lista negra!",
-		"uptimes_explanation": "Tiempo que los dispositivos conectados han estado en funcionamiento y conectados"
+		"uptimes_explanation": "Cantidad de dispositivos conectados según su tiempo de actividad"
 	},
 	"device_logs": {
 		"log": "Iniciar sesión",
@@ -347,6 +352,9 @@
 		"currently_selected_venue": "Lugar seleccionado actualmente: {{config}}",
 		"delete_success": "Entidad eliminada correctamente",
 		"delete_warning": "Advertencia: esta operación no se puede revertir",
+		"duplicate_from_node": "Duplicar con un nodo raíz específico",
+		"duplicate_map": "Mapa duplicado",
+		"duplicate_with_node": "Duplicar {{mapName}} con {{rootName}} como nodo raíz",
 		"edit_failure": "Actualización fallida: {{error}}",
 		"enter_here": "Ingrese las IP que desea agregar aquí",
 		"entire_tree": "Mapa de red",
@@ -363,6 +371,7 @@
 		"ip_detection": "Detección de IP",
 		"ip_formats": "Puede agregar direcciones IPv4 o IPv6 en los siguientes formatos:",
 		"lower_priority": "Hacer una prioridad más baja",
+		"map": "Mapa",
 		"map_delete_success": "¡Mapa eliminado correctamente!",
 		"need_select_entity": "Debe seleccionar una entidad de la siguiente tabla",
 		"no_ips": "No se seleccionaron direcciones IP",
@@ -569,6 +578,9 @@
 		"verification_code": "Ingrese su verificación aquí",
 		"wrong_code": "El código de verificación que se ingresó no es válido."
 	},
+	"preferences": {
+		"provisioning": "Aprovisionamiento"
+	},
 	"reboot": {
 		"directions": "¿Cuándo le gustaría reiniciar este dispositivo?",
 		"now": "¿Le gustaría reiniciar este dispositivo ahora?",
@@ -662,6 +674,19 @@
 		"uptime": "Tiempo de actividad",
 		"used_total_memory": "{{used}} usado / {{total}} total"
 	},
+	"subscriber": {
+		"create": "Crear suscriptor",
+		"edit": "Editar suscriptor",
+		"error_create": "Error al crear el suscriptor: {{error}}",
+		"error_delete": "Error al eliminar el suscriptor: {{error}}",
+		"error_fetching": "Error al obtener suscriptores: {{error}}",
+		"error_fetching_single": "Error al obtener el suscriptor: {{error}}",
+		"error_update": "Error al actualizar el suscriptor: {{error}}",
+		"subscribers": "Suscriptores",
+		"success_create": "¡Suscriptor creado correctamente!",
+		"success_delete": "¡Suscriptor eliminado correctamente!",
+		"success_update": "Suscriptor actualizado con éxito!"
+	},
 	"system": {
 		"error_fetching": "Error al obtener información del sistema",
 		"error_reloading": "Error al recargar: {{error}}",
@@ -751,6 +776,7 @@
 		"send_code_again": "Enviar Código De nuevo",
 		"show_hide_password": "Mostrar / Ocultar contraseña",
 		"successful_validation": "¡Número de teléfono validado! Haga clic en el botón guardar para vincularlo a su perfil",
+		"table_title": "Usuarios administrativos",
 		"update_failure": "Error al intentar actualizar: {{error}}",
 		"update_failure_title": "Actualización fallida",
 		"update_success": "Usuario actualizado con éxito",

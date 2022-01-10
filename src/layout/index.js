@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import routes from 'routes';
+import { CSidebarNavItem } from '@coreui/react';
+import { cilSettings, cilPeople, cilTask } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 import { Header, Footer, PageContainer, Sidebar, ToastProvider, useAuth } from 'ucentral-libs';
 
 const TheLayout = () => {
@@ -8,34 +11,34 @@ const TheLayout = () => {
   const { endpoints, currentToken, user, avatar, logout } = useAuth();
   const { t, i18n } = useTranslation();
 
-  const navigation = [
-    {
-      _tag: 'CSidebarNavItem',
-      name: t('simulation.title'),
-      icon: 'cilTask',
-      to: '/simulations',
-    },
-    {
-      _tag: 'CSidebarNavItem',
-      name: t('user.users'),
-      to: '/users',
-      icon: 'cilPeople',
-    },
-    {
-      _tag: 'CSidebarNavItem',
-      name: t('common.system'),
-      to: '/system',
-      icon: 'cilSettings',
-    },
-  ];
-
   return (
     <div className="c-app c-default-layout">
       <Sidebar
         showSidebar={showSidebar}
         setShowSidebar={setShowSidebar}
         logo="assets/Small_Logo.png"
-        options={navigation}
+        options={
+          <>
+            <CSidebarNavItem
+              className="font-weight-bold"
+              name={t('simulation.title')}
+              to="/simulations"
+              icon={<CIcon content={cilTask} size="xl" className="mr-3" />}
+            />
+            <CSidebarNavItem
+              className="font-weight-bold"
+              name={t('user.users')}
+              to="/users"
+              icon={<CIcon content={cilPeople} size="xl" className="mr-3" />}
+            />
+            <CSidebarNavItem
+              className="font-weight-bold"
+              name={t('common.system')}
+              to="/system"
+              icon={<CIcon content={cilSettings} size="xl" className="mr-3" />}
+            />
+          </>
+        }
         redirectTo="/devices"
         logoWidth="90px"
       />

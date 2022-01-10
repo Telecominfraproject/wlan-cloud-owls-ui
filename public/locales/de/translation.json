@@ -17,6 +17,7 @@
 		"blink": "LEDs Blinken",
 		"device_leds": "LEDs",
 		"execute_now": "Möchten Sie dieses Muster jetzt einstellen?",
+		"explanation": "Welches Muster möchten Sie auf diesem Gerät für 30 Sekunden einstellen?",
 		"pattern": "Wählen Sie das Muster, das Sie verwenden möchten:",
 		"set_leds": "LEDs einstellen",
 		"when_blink_leds": "Wann möchten Sie die LEDs blinken lassen?"
@@ -71,6 +72,7 @@
 		"date": "Datum",
 		"day": "tag",
 		"days": "tage",
+		"default_map": "Standardkarte",
 		"delete": "Löschen",
 		"delete_device": "Gerät löschen",
 		"details": "Einzelheiten",
@@ -147,12 +149,13 @@
 		"no_items": "Keine Gegenstände",
 		"none": "Keiner",
 		"not_connected": "Nicht verbunden",
-		"of_connected": "% der Geräte",
+		"of_connected": "% der verbundenen Geräte",
 		"off": "Aus",
 		"on": "An",
 		"optional": "Wahlweise",
 		"overall_health": "Allgemeine Gesundheit",
 		"password_policy": "Kennwortrichtlinie",
+		"preferences": "Einstellungen",
 		"preview": "Vorschau",
 		"program": "Programm",
 		"reason": "Grund",
@@ -176,6 +179,7 @@
 		"show_all": "Zeige alles",
 		"socket_connection_closed": "Verbindung geschlossen!",
 		"start": "Start",
+		"status": "Status",
 		"stop_editing": "Stoppen Sie die Bearbeitung",
 		"submit": "Absenden",
 		"submitted": "Eingereicht",
@@ -272,6 +276,7 @@
 	"contact": {
 		"access_pin": "Zugangs-PIN",
 		"add_contact": "Kontakt hinzufügen",
+		"contact": "Kontakt",
 		"create_contact": "Kontakt erstellen",
 		"currently_selected_contact": "Aktuell ausgewählter Kontakt: {{contact}}",
 		"delete": "Kontakt löschen?",
@@ -321,13 +326,13 @@
 		"error_edit_blacklist": "Fehler beim Bearbeiten der schwarzen Liste: {{error}}",
 		"error_fetching_device": "Fehler beim Abrufen der Geräteinformationen: {{error}}",
 		"error_fetching_devices": "Fehler beim Abrufen von Geräten: {{error}}",
-		"health_explanation": "Zustand der angeschlossenen Geräte",
-		"memory_explanation": "Von angeschlossenen Geräten belegter Speicher",
+		"health_explanation": "Zustand der verbundenen Geräte ((Geräte = 100 % * 100 + Geräte > 90 % * 95 + Geräte > 60 % * 75 + Geräte < 60 % * 35) / Verbundene Geräte)",
+		"memory_explanation": "Anzahl verbundener Geräte mit entsprechendem belegtem Speicher %",
 		"remove_from_blacklist": "Von der schwarzen Liste entfernen",
 		"success_added_blacklist": "Gerät erfolgreich zur Blacklist hinzugefügt!",
 		"success_edit_blacklist": "Blacklist erfolgreich bearbeitet!",
 		"success_removed_blacklist": "Gerät erfolgreich von Blacklist entfernt!",
-		"uptimes_explanation": "Zeit, zu der verbundene Geräte aktiv und verbunden waren"
+		"uptimes_explanation": "Anzahl der verbundenen Geräte basierend auf ihrer Betriebszeit"
 	},
 	"device_logs": {
 		"log": "Protokoll",
@@ -347,6 +352,9 @@
 		"currently_selected_venue": "Aktuell ausgewählter Veranstaltungsort: {{config}}",
 		"delete_success": "Entität erfolgreich gelöscht",
 		"delete_warning": "Achtung: Dieser Vorgang kann nicht rückgängig gemacht werden",
+		"duplicate_from_node": "Mit einem bestimmten Root-Knoten duplizieren",
+		"duplicate_map": "Karte duplizieren",
+		"duplicate_with_node": "Dupliziere {{mapName}} mit {{rootName}} als Root-Knoten",
 		"edit_failure": "Aktualisierung fehlgeschlagen : {{error}}",
 		"enter_here": "Geben Sie hier die IP(s) ein, die Sie hinzufügen möchten",
 		"entire_tree": "Netzwerkkarte",
@@ -363,6 +371,7 @@
 		"ip_detection": "IP-Erkennung",
 		"ip_formats": "Sie können IPv4- oder IPv6-Adressen in den folgenden Formaten hinzufügen:",
 		"lower_priority": "Niedrigere Priorität setzen",
+		"map": "Karte",
 		"map_delete_success": "Karte erfolgreich gelöscht!",
 		"need_select_entity": "sSie müssen eine Entität aus der folgenden Tabelle auswählen",
 		"no_ips": "Keine IPs ausgewählt",
@@ -569,6 +578,9 @@
 		"verification_code": "Geben Sie hier Ihre Bestätigung ein",
 		"wrong_code": "Der eingegebene Bestätigungscode ist ungültig."
 	},
+	"preferences": {
+		"provisioning": "Bereitstellung"
+	},
 	"reboot": {
 		"directions": "Wann möchten Sie dieses Gerät neu starten?",
 		"now": "Möchten Sie dieses Gerät jetzt neu starten?",
@@ -662,6 +674,19 @@
 		"uptime": "Betriebszeit",
 		"used_total_memory": "{{used}} verwendet / {{total}} insgesamt"
 	},
+	"subscriber": {
+		"create": "Abonnenten erstellen",
+		"edit": "Abonnent bearbeiten",
+		"error_create": "Fehler beim Erstellen des Abonnenten: {{error}}",
+		"error_delete": "Fehler beim Löschen des Abonnenten: {{error}}",
+		"error_fetching": "Fehler beim Abrufen von Abonnenten: {{error}}",
+		"error_fetching_single": "Fehler beim Abrufen des Abonnenten: {{error}}",
+		"error_update": "Fehler beim Aktualisieren des Abonnenten: {{error}}",
+		"subscribers": "Abonnenten",
+		"success_create": "Abonnent erfolgreich erstellt!",
+		"success_delete": "Abonnent erfolgreich gelöscht!",
+		"success_update": "Abonnent erfolgreich aktualisiert!"
+	},
 	"system": {
 		"error_fetching": "Fehler beim Abrufen von Systeminformationen",
 		"error_reloading": "Fehler beim Neuladen: {{error}}",
@@ -751,6 +776,7 @@
 		"send_code_again": "Code nochmal senden",
 		"show_hide_password": "Passwort anzeigen/verbergen",
 		"successful_validation": "Telefonnummer bestätigt! Klicken Sie auf die Schaltfläche Speichern, um es mit Ihrem Profil zu verknüpfen",
+		"table_title": "Admin-Benutzer",
 		"update_failure": "Fehler beim Aktualisieren: {{error}}",
 		"update_failure_title": "Update fehlgeschlagen",
 		"update_success": "Benutzer erfolgreich aktualisiert",
