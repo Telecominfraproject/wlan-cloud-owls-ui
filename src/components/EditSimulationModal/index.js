@@ -98,10 +98,10 @@ const initialForm = {
     required: true,
   },
   simulationLength: {
-    value: 60,
+    value: 720,
     error: false,
     required: true,
-    min: 1,
+    min: -1,
   },
   threads: {
     value: 1,

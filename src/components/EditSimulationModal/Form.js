@@ -10,6 +10,7 @@ import {
   CInputFile,
   CInvalidFeedback,
   CSelect,
+  CSwitch,
 } from '@coreui/react';
 import { RequiredAsterisk } from 'ucentral-libs';
 import { useTranslation } from 'react-i18next';
@@ -417,20 +418,41 @@ const EditSimulationForm = ({
           <RequiredAsterisk />
         </CLabel>
         <CCol sm="4">
-          <CInput
-            id="simulationLength"
-            type="number"
-            required
-            value={fields.simulationLength.value}
-            onChange={updateField}
-            invalid={
-              fields.simulationLength.value < fields.simulationLength.min ||
-              fields.simulationLength.value > fields.simulationLength.max
-            }
-            disabled={disable || !editing}
-            pattern="[0-9]*"
-            style={{ width: '100px' }}
-          />
+          <CRow>
+            <div style={{ display: 'flex', paddingLeft: '15px' }}>
+              <CLabel className="mt-1 mr-2" htmlFor="simulationLength">
+                Infinity?
+              </CLabel>
+              <CSwitch
+                className="mt-1"
+                color="primary"
+                disabled={disable || !editing}
+                checked={fields.simulationLength.value === 0}
+                onClick={() =>
+                  updateFieldWithKey('simulationLength', {
+                    value: fields.simulationLength.value === 0 ? 720 : 0,
+                  })
+                }
+                labelOn="Yes"
+                labelOff="No"
+              />
+              {fields.simulationLength.value !== 0 && (
+                <CInput
+                  id="simulationLength"
+                  type="number"
+                  required
+                  disabled={disable || !editing}
+                  value={fields.simulationLength.value}
+                  onChange={updateField}
+                  invalid={
+                    fields.simulationLength.value !== 0 && fields.simulationLength.value < 720
+                  }
+                  pattern="[0-9]*"
+                  style={{ width: '100px', marginLeft: '10px' }}
+                />
+              )}
+            </div>
+          </CRow>
           <CInvalidFeedback>
             {t('common.min_max', {
               min: fields.simulationLength.min,
