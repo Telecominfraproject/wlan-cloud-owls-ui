@@ -32,16 +32,6 @@ const initialForm = {
     error: false,
     required: true,
   },
-  certificate: {
-    value: '',
-    error: false,
-    required: true,
-  },
-  key: {
-    value: '',
-    error: false,
-    required: true,
-  },
   macPrefix: {
     value: '',
     error: false,
