@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {
   CForm,
@@ -7,68 +7,15 @@ import {
   CCol,
   CFormText,
   CRow,
-  CInputFile,
   CInvalidFeedback,
   CSelect,
+  CSwitch,
 } from '@coreui/react';
 import { RequiredAsterisk } from 'ucentral-libs';
 import { useTranslation } from 'react-i18next';
 
-const validatePem = (value) =>
-  (value.includes('---BEGIN CERTIFICATE---') && value.includes('---END CERTIFICATE---')) ||
-  (value.includes('---BEGIN PRIVATE KEY---') && value.includes('---END PRIVATE KEY---'));
-
-const EditSimulationForm = ({
-  show,
-  disable,
-  fields,
-  updateField,
-  updateFieldWithKey,
-  editing,
-}) => {
+const EditSimulationForm = ({ disable, fields, updateField, updateFieldWithKey, editing }) => {
   const { t } = useTranslation();
-  const [certKey, setCertKey] = useState(0);
-  const [keyKey, setKeyKey] = useState(0);
-
-  let fileReader;
-
-  const handleCertFileRead = () => {
-    const content = fileReader.result;
-    if (content && validatePem(content)) {
-      updateFieldWithKey('certificate', { value: content, error: false });
-    } else {
-      updateFieldWithKey('certificate', { error: true });
-    }
-  };
-
-  const handleCertFile = (file) => {
-    fileReader = new FileReader();
-    fileReader.onloadend = handleCertFileRead;
-    fileReader.readAsText(file);
-  };
-
-  const handleKeyFileRead = () => {
-    updateFieldWithKey('key', { error: false });
-    const content = fileReader.result;
-    if (content && validatePem(content)) {
-      updateFieldWithKey('key', { value: content, error: false });
-    } else {
-      updateFieldWithKey('key', { error: true });
-    }
-  };
-
-  const handleKeyFile = (file) => {
-    fileReader = new FileReader();
-    fileReader.onloadend = handleKeyFileRead;
-    fileReader.readAsText(file);
-  };
-
-  useEffect(() => {
-    if (show) {
-      setCertKey(certKey + 1);
-      setKeyKey(keyKey + 1);
-    }
-  }, [show]);
 
   return (
     <CForm>
@@ -110,55 +57,6 @@ const EditSimulationForm = ({
           <CFormText hidden={!fields.gateway.error} color={fields.gateway.error ? 'danger' : ''}>
             {t('common.required')}
           </CFormText>
-        </CCol>
-        <CLabel className="mb-2" sm="2" col htmlFor="certificate">
-          {t('common.certificate')}
-          <RequiredAsterisk />
-        </CLabel>
-        <CCol sm="4">
-          {editing ? (
-            <div>
-              <CInputFile
-                className="mt-1"
-                key={certKey}
-                id="file-input"
-                name="file-input"
-                accept=".pem"
-                onChange={(e) => handleCertFile(e.target.files[0])}
-              />
-              <CFormText
-                hidden={!fields.certificate.error}
-                color={fields.certificate.error ? 'danger' : ''}
-              >
-                {t('common.required')}
-              </CFormText>
-            </div>
-          ) : (
-            <div className="pt-1 mt-1">{t('simulation.valid_cert')}</div>
-          )}
-        </CCol>
-        <CLabel className="mb-2" sm="2" col htmlFor="key">
-          {t('common.key')}
-          <RequiredAsterisk />
-        </CLabel>
-        <CCol sm="4">
-          {editing ? (
-            <div>
-              <CInputFile
-                className="mt-1"
-                key={keyKey}
-                id="file-input"
-                name="file-input"
-                accept=".pem"
-                onChange={(e) => handleKeyFile(e.target.files[0])}
-              />
-              <CFormText hidden={!fields.key.error} color={fields.key.error ? 'danger' : ''}>
-                {t('common.required')}
-              </CFormText>
-            </div>
-          ) : (
-            <div className="pt-1 mt-1">{t('simulation.valid_key')}</div>
-          )}
         </CCol>
         <CLabel className="mb-2" sm="2" col htmlFor="macPrefix">
           {t('simulation.mac_prefix')}
@@ -417,20 +315,41 @@ const EditSimulationForm = ({
           <RequiredAsterisk />
         </CLabel>
         <CCol sm="4">
-          <CInput
-            id="simulationLength"
-            type="number"
-            required
-            value={fields.simulationLength.value}
-            onChange={updateField}
-            invalid={
-              fields.simulationLength.value < fields.simulationLength.min ||
-              fields.simulationLength.value > fields.simulationLength.max
-            }
-            disabled={disable || !editing}
-            pattern="[0-9]*"
-            style={{ width: '100px' }}
-          />
+          <CRow>
+            <div style={{ display: 'flex', paddingLeft: '15px' }}>
+              <CLabel className="mt-1 mr-2" htmlFor="simulationLength">
+                Infinity?
+              </CLabel>
+              <CSwitch
+                className="mt-1"
+                color="primary"
+                disabled={disable || !editing}
+                checked={fields.simulationLength.value === 0}
+                onClick={() =>
+                  updateFieldWithKey('simulationLength', {
+                    value: fields.simulationLength.value === 0 ? 720 : 0,
+                  })
+                }
+                labelOn="Yes"
+                labelOff="No"
+              />
+              {fields.simulationLength.value !== 0 && (
+                <CInput
+                  id="simulationLength"
+                  type="number"
+                  required
+                  disabled={disable || !editing}
+                  value={fields.simulationLength.value}
+                  onChange={updateField}
+                  invalid={
+                    fields.simulationLength.value !== 0 && fields.simulationLength.value < 720
+                  }
+                  pattern="[0-9]*"
+                  style={{ width: '100px', marginLeft: '10px' }}
+                />
+              )}
+            </div>
+          </CRow>
           <CInvalidFeedback>
             {t('common.min_max', {
               min: fields.simulationLength.min,
@@ -543,7 +462,6 @@ const EditSimulationForm = ({
 };
 
 EditSimulationForm.propTypes = {
-  show: PropTypes.bool.isRequired,
   disable: PropTypes.bool.isRequired,
   fields: PropTypes.instanceOf(Object).isRequired,
   updateField: PropTypes.func.isRequired,

@@ -8,12 +8,13 @@ import {
   CFormText,
   CRow,
   CInvalidFeedback,
+  CSwitch,
   CSelect,
 } from '@coreui/react';
 import { RequiredAsterisk } from 'ucentral-libs';
 import { useTranslation } from 'react-i18next';
 
-const AddSimulationForm = ({ disable, fields, updateField }) => {
+const AddSimulationForm = ({ disable, fields, updateField, updateFieldWithKey }) => {
   const { t } = useTranslation();
   return (
     <CForm>
@@ -316,20 +317,40 @@ const AddSimulationForm = ({ disable, fields, updateField }) => {
           <RequiredAsterisk />
         </CLabel>
         <CCol sm="4">
-          <CInput
-            id="simulationLength"
-            type="number"
-            required
-            value={fields.simulationLength.value}
-            onChange={updateField}
-            invalid={
-              fields.simulationLength.value < fields.simulationLength.min ||
-              fields.simulationLength.value > fields.simulationLength.max
-            }
-            disabled={disable}
-            pattern="[0-9]*"
-            style={{ width: '100px' }}
-          />
+          <CRow>
+            <div style={{ display: 'flex', paddingLeft: '15px' }}>
+              <CLabel className="mt-1 mr-2" htmlFor="simulationLength">
+                Infinity
+              </CLabel>
+              <CSwitch
+                className="mt-1"
+                color="primary"
+                checked={fields.simulationLength.value === 0}
+                onClick={() =>
+                  updateFieldWithKey('simulationLength', {
+                    value: fields.simulationLength.value === 0 ? 720 : 0,
+                  })
+                }
+                labelOn="Yes"
+                labelOff="No"
+              />
+              {fields.simulationLength.value !== 0 && (
+                <CInput
+                  id="simulationLength"
+                  type="number"
+                  required
+                  value={fields.simulationLength.value}
+                  onChange={updateField}
+                  invalid={
+                    fields.simulationLength.value !== 0 && fields.simulationLength.value < 720
+                  }
+                  disabled={disable}
+                  pattern="[0-9]*"
+                  style={{ width: '100px', marginLeft: '10px' }}
+                />
+              )}
+            </div>
+          </CRow>
           <CInvalidFeedback>
             {t('common.min_max', {
               min: fields.simulationLength.min,
@@ -477,6 +498,7 @@ AddSimulationForm.propTypes = {
   disable: PropTypes.bool.isRequired,
   fields: PropTypes.instanceOf(Object).isRequired,
   updateField: PropTypes.func.isRequired,
+  updateFieldWithKey: PropTypes.func.isRequired,
 };
 
 export default AddSimulationForm;

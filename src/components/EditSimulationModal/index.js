@@ -32,16 +32,6 @@ const initialForm = {
     error: false,
     required: true,
   },
-  certificate: {
-    value: '',
-    error: false,
-    required: true,
-  },
-  key: {
-    value: '',
-    error: false,
-    required: true,
-  },
   macPrefix: {
     value: '',
     error: false,
@@ -98,10 +88,10 @@ const initialForm = {
     required: true,
   },
   simulationLength: {
-    value: 60,
+    value: 720,
     error: false,
     required: true,
-    min: 1,
+    min: -1,
   },
   threads: {
     value: 1,

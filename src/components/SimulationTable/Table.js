@@ -173,7 +173,11 @@ const SimulationTable = ({
               maxAssociations: (item) => <td className="align-middle">{item.maxAssociations}</td>,
               minClients: (item) => <td className="align-middle">{item.minClients}</td>,
               maxClients: (item) => <td className="align-middle">{item.maxClients}</td>,
-              simulationLength: (item) => <td className="align-middle">{item.simulationLength}</td>,
+              simulationLength: (item) => (
+                <td className="align-middle">
+                  {item.simulationLength === 0 ? 'Infinity' : item.simulationLength}
+                </td>
+              ),
               actions: (item) => (
                 <td className="text-center align-middle">
                   <CButtonToolbar

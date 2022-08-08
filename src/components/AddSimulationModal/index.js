@@ -72,7 +72,7 @@ const initialForm = {
     value: 3600,
     error: false,
     required: true,
-    min: 120,
+    min: -1,
   },
   threads: {
     value: 16,
@@ -215,7 +215,12 @@ const AddSimulationModal = ({ show, toggle, refresh }) => {
         </div>
       </CModalHeader>
       <CModalBody className="pb-5">
-        <AddSimulationForm disable={loading} fields={fields} updateField={updateFieldWithId} />
+        <AddSimulationForm
+          disable={loading}
+          fields={fields}
+          updateField={updateFieldWithId}
+          updateFieldWithKey={updateField}
+        />
       </CModalBody>
     </CModal>
   );
