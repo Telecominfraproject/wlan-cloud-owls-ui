@@ -12,6 +12,7 @@ import { NumberField } from 'components/Form/Fields/NumberField';
 import { SelectField } from 'components/Form/Fields/SelectField';
 import { StringField } from 'components/Form/Fields/StringField';
 import { Modal } from 'components/Modals/Modal';
+import { DEVICE_TYPES } from 'constants/deviceTypes';
 import { useGetDeviceTypes } from 'hooks/Network/Firmware';
 import {
   Simulation,
@@ -36,6 +37,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const getDeviceTypes = useGetDeviceTypes();
+  const deviceTypes = getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES;
   const { form, formRef } = useFormRef();
   const [formKey, setFormKey] = React.useState(uuid());
   const updateSim = useUpdateSimulation();
@@ -154,7 +156,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
           innerRef={formRef as React.Ref<FormikProps<object>>}
           key={formKey}
           initialValues={simulation}
-          validationSchema={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0])}
+          validationSchema={SimulationSchema(t, deviceTypes[0])}
           onSubmit={async (data, { setSubmitting, resetForm }) =>
             updateSim.mutateAsync(
               { ...(data as Partial<Simulation>), id: simulation.id },
@@ -189,7 +191,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                   name="deviceType"
                   label={t('common.type')}
                   options={
-                    getDeviceTypes.data?.deviceTypes?.map((v) => ({
+                    deviceTypes.map((v) => ({
                       value: v,
                       label: v,
                     })) ?? []
