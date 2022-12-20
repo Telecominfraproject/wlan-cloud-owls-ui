@@ -12,6 +12,7 @@ import { SelectField } from 'components/Form/Fields/SelectField';
 import { StringField } from 'components/Form/Fields/StringField';
 import { ConfirmCloseAlertModal } from 'components/Modals/ConfirmCloseAlert';
 import { Modal } from 'components/Modals/Modal';
+import { DEVICE_TYPES } from 'constants/deviceTypes';
 import { useGetDeviceTypes } from 'hooks/Network/Firmware';
 import { Simulation, useCreateSimulation } from 'hooks/Network/Simulations';
 import { useFormModal } from 'hooks/useFormModal';
@@ -22,6 +23,7 @@ import { AxiosError } from 'models/Axios';
 const CreateSimulationModal = () => {
   const { t } = useTranslation();
   const getDeviceTypes = useGetDeviceTypes();
+  const deviceTypes = getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES;
   const { form, formRef } = useFormRef();
   const [formKey, setFormKey] = React.useState(uuid());
   const { isOpen, isConfirmOpen, onOpen, closeConfirm, closeModal, closeCancelAndForm } = useFormModal({
@@ -55,8 +57,8 @@ const CreateSimulationModal = () => {
         <Formik
           innerRef={formRef as React.Ref<FormikProps<object>>}
           key={formKey}
-          initialValues={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0]).cast(undefined)}
-          validationSchema={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0])}
+          initialValues={SimulationSchema(t, deviceTypes[0]).cast(undefined)}
+          validationSchema={SimulationSchema(t, deviceTypes[0])}
           onSubmit={async (data, { setSubmitting, resetForm }) =>
             createSim.mutateAsync(data as Partial<Simulation>, {
               onSuccess: () => {
@@ -88,7 +90,7 @@ const CreateSimulationModal = () => {
                   name="deviceType"
                   label={t('common.type')}
                   options={
-                    getDeviceTypes.data?.deviceTypes?.map((v) => ({
+                    deviceTypes.map((v) => ({
                       value: v,
                       label: v,
                     })) ?? []
