@@ -10,7 +10,7 @@ const ProfileLayout = () => (
     breakpointCols={{
       default: 3,
       1800: 2,
-      1100: 1,
+      1200: 1,
     }}
     className="my-masonry-grid"
     columnClassName="my-masonry-grid_column"

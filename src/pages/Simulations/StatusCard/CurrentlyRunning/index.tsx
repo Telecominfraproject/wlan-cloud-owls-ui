@@ -8,45 +8,41 @@ import {
   Alert,
   AlertIcon,
   AlertTitle,
-  Box,
-  Button,
-  Center,
-  Flex,
-  Heading,
-  SimpleGrid,
   Spacer,
-  Spinner,
-  Text,
-  Tooltip,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   useToast,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import MessagesChart from './MessagesChart';
-import TxRxChart from './TxRxChart';
+import SingleSimulationCurrentlyRunning from './SingleSimulationCurrentlyRunning';
 import { Card } from 'components/Containers/Card';
-import FormattedDate from 'components/InformationDisplays/FormattedDate';
-import { bytesString } from 'helpers/stringHelper';
 import {
+  SimulationStatus,
   useCancelSimulation,
   useGetSimulations,
-  useGetSimulationStatus,
+  useGetSimulationsStatus,
   useStopSimulation,
 } from 'hooks/Network/Simulations';
 
-const CurrentlyRunningCard = () => {
+type Props = {
+  currentlyRunningStatus: SimulationStatus[];
+};
+
+const CurrentlyRunningCard = ({ currentlyRunningStatus }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const getSims = useGetSimulations();
-  const getStatus = useGetSimulationStatus();
+  const getStatus = useGetSimulationsStatus();
   const cancelSim = useCancelSimulation();
   const stopSim = useStopSimulation();
 
-  const currentSim = getSims.data?.list?.find((sim) => sim.id === getStatus.data?.simulationId);
-
-  const handleStopClick = () =>
+  const handleStopClick = (id: string, simulationId: string) =>
     stopSim.mutate(
-      { id: getStatus.data?.id ?? '' },
+      { runId: id, simulationId },
       {
         onSuccess: () => {
           toast({
@@ -74,9 +70,9 @@ const CurrentlyRunningCard = () => {
         },
       },
     );
-  const handleCancelClick = () =>
+  const handleCancelClick = (id: string, simulationId: string) =>
     cancelSim.mutate(
-      { id: getStatus.data?.id ?? '' },
+      { runId: id, simulationId },
       {
         onSuccess: () => {
           toast({
@@ -104,6 +100,10 @@ const CurrentlyRunningCard = () => {
         },
       },
     );
+
+  const getTabName = (status: SimulationStatus) =>
+    getSims.data?.list.find((sim) => sim.id === status.simulationId)?.name ?? 'Unknown';
+
   return (
     <Card p={0}>
       <Accordion allowToggle>
@@ -118,119 +118,35 @@ const CurrentlyRunningCard = () => {
                     borderBottomRightRadius={isExpanded ? '0px' : undefined}
                   >
                     <AlertIcon />
-                    <AlertTitle>{t('simulation.sim_currently_running', { sim: currentSim?.name })}</AlertTitle>
+                    <AlertTitle>
+                      {t('simulation.currently_running', { count: currentlyRunningStatus.length })}
+                    </AlertTitle>
                     <Spacer />
                     <AccordionIcon />
                   </Alert>
                 </AccordionButton>
               </h2>
               <AccordionPanel>
-                <Box>
-                  {getStatus.data ? (
-                    <>
-                      <Flex>
-                        <Heading my="auto" size="sm" textDecor="underline">
-                          {currentSim?.name}
-                        </Heading>
-                        <Spacer />
-                        <Button onClick={handleStopClick} isLoading={stopSim.isLoading} colorScheme="yellow" size="sm">
-                          {t('simulation.stop')}
-                        </Button>
-                        <Tooltip label={t('simulation.cancel_explanation')}>
-                          <Button
-                            onClick={handleCancelClick}
-                            isLoading={cancelSim.isLoading}
-                            colorScheme="red"
-                            size="sm"
-                            ml={2}
-                          >
-                            {t('simulation.cancel')}
-                          </Button>
-                        </Tooltip>
-                      </Flex>
-                      <SimpleGrid minChildWidth="200px">
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('common.started')}
-                          </Heading>
-                          <FormattedDate date={getStatus.data?.startTime} />
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.owner')}
-                          </Heading>
-                          <Text>{getStatus.data?.owner}</Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.time_to_full')}
-                          </Heading>
-                          <Text>
-                            {getStatus.data.timeToFullDevices} {t('common.seconds')}
-                          </Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.current_live_devices')}
-                          </Heading>
-                          <Text>{getStatus.data.liveDevices}</Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.error_devices')}
-                          </Heading>
-                          <Text>{getStatus.data.errorDevices}</Text>
-                        </Box>
-                      </SimpleGrid>
-                      <Heading mt={4} mb={1} size="sm" textDecor="underline">
-                        {t('analytics.total_data')}
-                      </Heading>
-                      <SimpleGrid minChildWidth="200px">
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.tx_messages')}
-                          </Heading>
-                          <Text>{getStatus.data.msgsTx.toLocaleString()}</Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.tx')}
-                          </Heading>
-                          <Text>{bytesString(getStatus.data.tx)}</Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.rx_messages')}
-                          </Heading>
-                          <Text>{getStatus.data.msgsRx.toLocaleString()}</Text>
-                        </Box>
-                        <Box>
-                          <Heading size="sm" my="auto">
-                            {t('simulation.rx')}
-                          </Heading>
-                          <Text>{bytesString(getStatus.data.rx)}</Text>
-                        </Box>
-                        <Box />
-                      </SimpleGrid>
-                      <Heading mt={4} mb={0} size="sm" textDecor="underline">
-                        {t('simulation.realtime_data')}
-                      </Heading>
-                      <Box h="calc(20vh)" w="100%">
-                        <TxRxChart />
-                      </Box>
-                      <Heading mt={4} mb={0} size="sm" textDecor="underline">
-                        {t('simulation.realtime_messages')}
-                      </Heading>
-                      <Box h="calc(20vh)" w="100%">
-                        <MessagesChart />
-                      </Box>
-                    </>
-                  ) : (
-                    <Center my="50px">
-                      <Spinner size="xl" />
-                    </Center>
-                  )}
-                </Box>
+                <Tabs key={getStatus.data?.length}>
+                  <TabList>
+                    {getStatus.data?.map((status) => (
+                      <Tab key={status.id}>{getTabName(status)}</Tab>
+                    ))}
+                  </TabList>
+                  <TabPanels>
+                    {getStatus.data?.map((status) => (
+                      <TabPanel key={status.id}>
+                        <SingleSimulationCurrentlyRunning
+                          status={status}
+                          onStop={handleStopClick}
+                          isStopLoading={stopSim.isLoading}
+                          onCancel={handleCancelClick}
+                          isCancelLoading={cancelSim.isLoading}
+                        />
+                      </TabPanel>
+                    ))}
+                  </TabPanels>
+                </Tabs>
               </AccordionPanel>
             </>
           )}

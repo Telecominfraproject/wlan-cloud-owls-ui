@@ -17,13 +17,13 @@ import {
   useToast,
   HStack,
 } from '@chakra-ui/react';
+import { ClockCounterClockwise, MagnifyingGlass, Play, Stop, Trash } from '@phosphor-icons/react';
 import axios from 'axios';
-import { ClockCounterClockwise, MagnifyingGlass, Play, Stop, Trash } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import {
   Simulation,
   useDeleteSimulation,
-  useGetSimulationStatus,
+  useGetSimulationsStatus,
   useStartSimulation,
   useStopSimulation,
 } from 'hooks/Network/Simulations';
@@ -38,10 +38,12 @@ const Actions = ({ simulation, openEdit, onOpenHistory }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const getStatus = useGetSimulationStatus();
+  const getStatus = useGetSimulationsStatus();
   const startSim = useStartSimulation();
   const stopSim = useStopSimulation();
   const deleteSim = useDeleteSimulation();
+
+  const currentSimulationStatus = getStatus.data?.find(({ simulationId }) => simulationId === simulation.id);
 
   const handleEditClick = () => {
     openEdit(simulation);
@@ -81,7 +83,7 @@ const Actions = ({ simulation, openEdit, onOpenHistory }: Props) => {
     );
   const handleStopClick = () =>
     stopSim.mutate(
-      { id: getStatus.data?.id ?? '' },
+      { runId: currentSimulationStatus?.id ?? '', simulationId: simulation.id },
       {
         onSuccess: () => {
           toast({
@@ -143,7 +145,7 @@ const Actions = ({ simulation, openEdit, onOpenHistory }: Props) => {
 
   return (
     <HStack mx="auto">
-      {getStatus.data?.simulationId === simulation.id && getStatus.data.state === 'running' ? (
+      {currentSimulationStatus && currentSimulationStatus.state === 'running' ? (
         <Tooltip hasArrow label={t('simulation.stop')} placement="top">
           <IconButton
             aria-label={t('simulation.stop')}

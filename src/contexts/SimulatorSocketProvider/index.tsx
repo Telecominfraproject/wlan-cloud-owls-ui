@@ -1,18 +1,25 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSimulatorStore } from './useStore';
-import { WebSocketInitialMessage, WebSocketNotification } from './utils';
+import { SimulationWebSocketRawMessage, WebSocketNotification } from './utils';
 import { axiosOwls, axiosSec } from 'constants/axiosInstances';
 import { useAuth } from 'contexts/AuthProvider';
+import { SimulationStatus } from 'hooks/Network/Simulations';
 
-const extractWebSocketNotification = (message?: WebSocketInitialMessage): WebSocketNotification | undefined => {
+const extractWebSocketNotification = (message?: SimulationWebSocketRawMessage): WebSocketNotification | undefined => {
   if (message && message.notification) {
-    if (message.notification.type === 'owls_simulation_update') {
+    if (message.notification.type_id === 1000) {
       return {
         type: 'SIMULATION_STATUS',
-        content: message.notification.content,
+        content: message.notification.content as SimulationStatus,
       };
     }
+  }
+  if (message?.notificationTypes) {
+    return {
+      type: 'INITIAL_MESSAGE',
+      message,
+    };
   }
   return undefined;
 };
@@ -38,7 +45,7 @@ export const SimulatorSocketProvider = ({ children }: { children: React.ReactEle
 
   const onMessage = useCallback((message: MessageEvent<string>) => {
     try {
-      const data = JSON.parse(message.data) as WebSocketInitialMessage | undefined;
+      const data = JSON.parse(message.data) as SimulationWebSocketRawMessage | undefined;
       const extracted = extractWebSocketNotification(data);
       if (extracted) {
         addMessage(extracted);

@@ -1,16 +1,81 @@
 import { useToast } from '@chakra-ui/react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { axiosSec } from 'constants/axiosInstances';
 import { AxiosError } from 'models/Axios';
-import { User } from 'models/User';
+import { AtLeast } from 'models/General';
+import { Note } from 'models/Note';
 
-const getAvatarPromises = (userList: User[]) => {
+export type UserRole =
+  | 'root'
+  | 'admin'
+  | 'subscriber'
+  | 'partner'
+  | 'csr'
+  | 'system'
+  | 'installer'
+  | 'noc'
+  | 'accounting';
+
+export type User = {
+  avatar: string;
+  blackListed: boolean;
+  creationDate: number;
+  currentLoginURI: string;
+  currentPassword: string;
+  description: string;
+  email: string;
+  id: string;
+  lastEmailCheck: number;
+  lastLogin: number;
+  lastPasswordChange: number;
+  lastPasswords: string[];
+  locale: string;
+  location: string;
+  modified: number;
+  name: string;
+  notes: Note[];
+  oauthType: string;
+  oauthUserInfo: string;
+  owner: string;
+  securityPolicy: string;
+  securityPolicyChange: number;
+  signingUp: string;
+  suspended: boolean;
+  userRole: UserRole;
+  userTypeProprietaryInfo: {
+    authenticatorSecret: string;
+    mfa: {
+      enabled: boolean;
+      method?: 'authenticator' | 'sms' | 'email' | '';
+    };
+    mobiles: { number: string }[];
+  };
+  validated: boolean;
+  validationDate: number;
+  validationEmail: string;
+  validationURI: string;
+  waitingForEmailCheck: boolean;
+};
+
+const getAvatarPromises = (userList: User[], queryClient: QueryClient) => {
   const promises = userList.map(async (user) => {
     if (user.avatar !== '' && user.avatar !== '0') {
-      return axiosSec.get(`avatar/${user.id}?cache=${user.avatar}`, {
-        responseType: 'arraybuffer',
-      });
+      // If the avatar is already in the cache, return it
+      const cachedAvatar = queryClient.getQueryData(['avatar', user.id, user.avatar]);
+      if (cachedAvatar) return cachedAvatar;
+
+      return axiosSec
+        .get(`avatar/${user.id}?cache=${user.avatar}`, {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          queryClient.setQueryData(['avatar', user.id, user.avatar], response);
+          return response;
+        })
+        .catch((e) => {
+          throw e;
+        });
     }
     return Promise.resolve('');
   });
@@ -18,28 +83,57 @@ const getAvatarPromises = (userList: User[]) => {
   return promises;
 };
 
-export const useGetUsers = ({ setUsersWithAvatars }: { setUsersWithAvatars: (users: unknown) => void }) => {
+const getBatchUsers = async (offset: number, limit: number) => {
+  const users = await axiosSec
+    .get(`users?offset=${offset}&limit=${limit}&withExtendedInfo=true`)
+    .then(({ data }) => data.users as User[]);
+
+  return users;
+};
+
+const getAllUsers = async () => {
+  let users: User[] = [];
+  let offset = 0;
+  const limit = 500;
+  let lastResponseLength = 0;
+
+  do {
+    // eslint-disable-next-line no-await-in-loop
+    const response = await getBatchUsers(offset, limit);
+    users = [...users, ...response];
+    offset += limit;
+    lastResponseLength = response.length;
+  } while (lastResponseLength === limit);
+
+  return users;
+};
+
+const getUsers = async (queryClient: QueryClient) => {
+  const users = await getAllUsers();
+
+  const avatars = await Promise.allSettled(getAvatarPromises(users, queryClient)).then((results) =>
+    results.map((response) => {
+      if (response.status === 'fulfilled' && response?.value !== '') {
+        const base64 = btoa(
+          // @ts-ignore
+          new Uint8Array(response.value.data).reduce((respData, byte) => respData + String.fromCharCode(byte), ''),
+        );
+        return `data:;base64,${base64}`;
+      }
+      return '';
+    }),
+  );
+
+  return users.map((newUser: User, i: number) => ({ ...newUser, avatar: avatars[i] })) as User[];
+};
+
+export const useGetUsers = () => {
   const { t } = useTranslation();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
-  return useQuery(['get-users'], () => axiosSec.get('users').then(({ data }) => data.users), {
-    onSuccess: async (users) => {
-      const avatars = await Promise.allSettled(getAvatarPromises(users)).then((results) =>
-        results.map((response) => {
-          if (response.status === 'fulfilled' && response?.value !== '') {
-            const base64 = btoa(
-              // @ts-ignore
-              new Uint8Array(response.value.data).reduce((respData, byte) => respData + String.fromCharCode(byte), ''),
-            );
-            return `data:;base64,${base64}`;
-          }
-          return '';
-        }),
-      );
-
-      const newUsers = users.map((newUser: User, i: number) => ({ ...newUser, avatar: avatars[i] }));
-      setUsersWithAvatars(newUsers);
-    },
+  return useQuery(['users'], () => getUsers(queryClient), {
+    staleTime: 30 * 1000,
     onError: (e: AxiosError) => {
       if (!toast.isActive('users-fetching-error'))
         toast({
@@ -62,24 +156,28 @@ export const useGetUser = ({ id, enabled }: { id: string; enabled: boolean }) =>
   const { t } = useTranslation();
   const toast = useToast();
 
-  return useQuery(['get-user', id], () => axiosSec.get(`user/${id}?withExtendedInfo=true`).then(({ data }) => data), {
-    enabled,
-    onError: (e: AxiosError) => {
-      if (!toast.isActive('user-fetching-error'))
-        toast({
-          id: 'user-fetching-error',
-          title: t('common.error'),
-          description: t('crud.error_fetching_obj', {
-            obj: t('users.one'),
-            e: e?.response?.data?.ErrorDescription,
-          }),
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right',
-        });
+  return useQuery(
+    ['users', id],
+    () => axiosSec.get(`user/${id}?withExtendedInfo=true`).then(({ data }) => data as User),
+    {
+      enabled,
+      onError: (e: AxiosError) => {
+        if (!toast.isActive('user-fetching-error'))
+          toast({
+            id: 'user-fetching-error',
+            title: t('common.error'),
+            description: t('crud.error_fetching_obj', {
+              obj: t('users.one'),
+              e: e?.response?.data?.ErrorDescription,
+            }),
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'top-right',
+          });
+      },
     },
-  });
+  );
 };
 
 export const useSendUserEmailValidation = ({ id, refresh }: { id: string; refresh: () => void }) => {
@@ -114,13 +212,80 @@ export const useSendUserEmailValidation = ({ id, refresh }: { id: string; refres
     },
   });
 };
-export const useSuspendUser = ({ id }: { id: string }) =>
-  useMutation((isSuspended: boolean) =>
-    axiosSec.put(`user/${id}`, {
-      suspended: isSuspended,
-    }),
-  );
-export const useResetMfa = ({ id }: { id: string }) => useMutation(() => axiosSec.put(`user/${id}?resetMFA=true`, {}));
+export const useSuspendUser = ({ id }: { id: string }) => {
+  const queryClient = useQueryClient();
 
-export const useResetPassword = ({ id }: { id: string }) =>
-  useMutation(() => axiosSec.put(`user/${id}?forgotPassword=true`, {}));
+  return useMutation(
+    (isSuspended: boolean) =>
+      axiosSec.put(`user/${id}`, {
+        suspended: isSuspended,
+      }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['users']);
+      },
+    },
+  );
+};
+
+export const useResetMfa = ({ id }: { id: string }) => {
+  const queryClient = useQueryClient();
+
+  return useMutation(() => axiosSec.put(`user/${id}?resetMFA=true`, {}), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+
+export const useResetPassword = ({ id }: { id: string }) => {
+  const queryClient = useQueryClient();
+
+  return useMutation(() => axiosSec.put(`user/${id}?forgotPassword=true`, {}), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+
+const deleteUser = async (userId: string) => axiosSec.delete(`/user/${userId}`);
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(deleteUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+
+const createUser = async (newUser: {
+  name: string;
+  description?: string;
+  email: string;
+  currentPassword: string;
+  notes?: { note: string }[];
+  userRole: string;
+  emailValidation: boolean;
+  changePassword: boolean;
+}) => axiosSec.post(`user/0${newUser.emailValidation ? '?email_verification=true' : ''}`, newUser);
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(createUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+
+const modifyUser = async (newUser: AtLeast<User, 'id'>) => axiosSec.put(`user/${newUser.id}`, newUser);
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(modifyUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};

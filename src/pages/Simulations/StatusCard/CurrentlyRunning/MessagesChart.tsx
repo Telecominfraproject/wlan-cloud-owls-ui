@@ -22,11 +22,18 @@ import { useSimulatorStore } from 'contexts/SimulatorSocketProvider/useStore';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const MessagesChart = () => {
-  const { colorMode } = useColorMode();
-  const currentSimulationData = useSimulatorStore((state) => state.currentSimulationData);
+type Props = {
+  statusId: string;
+};
 
-  const { data } = React.useMemo(() => {
+const MessagesChart = ({ statusId }: Props) => {
+  const { colorMode } = useColorMode();
+  const currentSimulationData = useSimulatorStore(
+    React.useCallback((state) => state.currentSimulationsData[statusId] ?? [], [statusId]),
+    (oldState, newState) => oldState?.length === newState?.length,
+  );
+
+  const data = React.useMemo(() => {
     const labels = [] as string[];
     const msgsTx = [] as number[];
     const msgsRx = [] as number[];
@@ -41,21 +48,14 @@ const MessagesChart = () => {
         labels.push(curr.timestamp.toLocaleTimeString());
         msgsTx.push(curr.msgsTx);
         msgsRx.push(curr.msgsRx);
-      } else if (acc.entriesCount < 3) {
+      } else {
         acc.msgsTx += curr.msgsTx;
         acc.msgsRx += curr.msgsRx;
+        msgsTx.push(curr.msgsTx);
+        msgsRx.push(curr.msgsRx);
         acc.entriesCount += 1;
-        acc.dates.push(Math.floor(curr.timestamp.getTime() / 1000));
-      } else {
-        labels.push(
-          new Date(Math.floor(acc.dates.reduce((a, b) => a + b, 0) / acc.entriesCount) * 1000).toLocaleTimeString(),
-        );
-        msgsTx.push(acc.msgsTx);
-        msgsRx.push(acc.msgsRx);
-        acc.msgsTx = 0;
-        acc.msgsRx = 0;
-        acc.entriesCount = 0;
-        acc.dates = [];
+        acc.dates.push(curr.timestamp.getTime() / 1000);
+        labels.push(curr.timestamp.toLocaleTimeString());
       }
     }
 
@@ -79,9 +79,7 @@ const MessagesChart = () => {
       ],
     };
 
-    return {
-      data: newData,
-    };
+    return newData;
   }, [currentSimulationData]);
 
   const options: _DeepPartialObject<
@@ -89,7 +87,7 @@ const MessagesChart = () => {
       ElementChartOptions<'line'> &
       PluginChartOptions<'line'> &
       DatasetChartOptions<'line'> &
-      ScaleChartOptions<any> &
+      ScaleChartOptions<'line'> &
       LineControllerChartOptions
   > = React.useMemo(
     () => ({
