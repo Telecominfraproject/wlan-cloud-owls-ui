@@ -42,7 +42,7 @@ const DurationField = ({ name, label, isRequired, isDisabled, unit }: Props) => 
         {label}
       </FormLabel>
       <Flex h="40px">
-        <RadioGroup onChange={onRadioChange} defaultValue={value === 0 ? '0' : '1'}>
+        <RadioGroup onChange={onRadioChange} defaultValue={value === 0 ? '0' : '1'} my="auto">
           <Stack spacing={5} direction="row">
             <Radio colorScheme="blue" value="0">
               {t('simulation.infinite')}
@@ -52,20 +52,29 @@ const DurationField = ({ name, label, isRequired, isDisabled, unit }: Props) => 
                 <Text my="auto" mr={2}>
                   {t('common.custom')}
                 </Text>
-                <InputGroup>
-                  <NumberInput isDisabled={value === 0} value={value} onChange={(_, v) => onChange(v)} w="120px">
-                    <NumberInputField />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <InputRightAddon>{unit}</InputRightAddon>
-                </InputGroup>
               </Flex>
             </Radio>
           </Stack>
         </RadioGroup>
+        <InputGroup>
+          <NumberInput
+            isDisabled={value === 0 || isDisabled}
+            min={1}
+            value={value}
+            onChange={(_, v) => {
+              if (Number.isNaN(v) || v === 0) onChange(1);
+              else onChange(v);
+            }}
+            w="120px"
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+          <InputRightAddon>{unit}</InputRightAddon>
+        </InputGroup>
       </Flex>
       <FormErrorMessage>{error}</FormErrorMessage>
     </FormControl>

@@ -13,7 +13,6 @@ import {
   ElementChartOptions,
   PluginChartOptions,
   DatasetChartOptions,
-  ScaleChartOptions,
   LineControllerChartOptions,
 } from 'chart.js';
 import { _DeepPartialObject } from 'chart.js/types/utils';
@@ -35,9 +34,16 @@ const getDivisionFactor = (maxBytes: number) => {
   return { factor: 1024 * 1024 * 1024, unit: 'GB' };
 };
 
-const TxRxChart = () => {
+type Props = {
+  statusId: string;
+};
+
+const TxRxChart = ({ statusId }: Props) => {
   const { colorMode } = useColorMode();
-  const currentSimulationData = useSimulatorStore((state) => state.currentSimulationData);
+  const currentSimulationData = useSimulatorStore(
+    React.useCallback((state) => state.currentSimulationsData[statusId] ?? [], [statusId]),
+    (oldState, newState) => oldState?.length === newState?.length,
+  );
 
   const { data, unit } = React.useMemo(() => {
     const { factor, unit: newUnit } = getDivisionFactor(Math.max(...currentSimulationData.map((o) => o.tx)));
@@ -55,21 +61,14 @@ const TxRxChart = () => {
         labels.push(curr.timestamp.toLocaleTimeString());
         tx.push(Math.floor((curr.tx / factor) * 100) / 100);
         rx.push(Math.floor((curr.rx / factor) * 100) / 100);
-      } else if (acc.entriesCount < 3) {
+      } else {
         acc.tx += curr.tx;
         acc.rx += curr.rx;
+        tx.push(Math.floor((curr.tx / factor) * 100) / 100);
+        rx.push(Math.floor((curr.rx / factor) * 100) / 100);
         acc.entriesCount += 1;
-        acc.dates.push(Math.floor(curr.timestamp.getTime() / 1000));
-      } else {
-        labels.push(
-          new Date(Math.floor(acc.dates.reduce((a, b) => a + b, 0) / acc.entriesCount) * 1000).toLocaleTimeString(),
-        );
-        tx.push(Math.floor((acc.tx / factor) * 100) / 100);
-        rx.push(Math.floor((acc.rx / factor) * 100) / 100);
-        acc.tx = 0;
-        acc.rx = 0;
-        acc.entriesCount = 0;
-        acc.dates = [];
+        acc.dates.push(curr.timestamp.getTime() / 1000);
+        labels.push(curr.timestamp.toLocaleTimeString());
       }
     }
 
@@ -104,7 +103,6 @@ const TxRxChart = () => {
       ElementChartOptions<'line'> &
       PluginChartOptions<'line'> &
       DatasetChartOptions<'line'> &
-      ScaleChartOptions<any> &
       LineControllerChartOptions
   > = React.useMemo(
     () => ({

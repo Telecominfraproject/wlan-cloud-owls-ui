@@ -1,8 +1,9 @@
 import React from 'react';
 import { Icon } from '@chakra-ui/react';
-import { Cloud, Info, UsersThree } from 'phosphor-react';
+import { Cloud, Info, ListBullets, UsersThree } from '@phosphor-icons/react';
 import { Route } from 'models/Routes';
 
+const NotificationsPage = React.lazy(() => import('pages/Notifications'));
 const SimulationsPage = React.lazy(() => import('pages/Simulations'));
 const ProfilePage = React.lazy(() => import('pages/Profile'));
 const SystemPage = React.lazy(() => import('pages/SystemPage'));
@@ -27,6 +28,15 @@ const routes: Route[] = [
       <Icon as={UsersThree} color="inherit" h={active ? '32px' : '24px'} w={active ? '32px' : '24px'} />
     ),
     component: ProfilePage,
+  },
+  {
+    authorized: ['root', 'partner', 'admin', 'csr', 'system'],
+    path: '/logs',
+    name: 'controller.devices.logs',
+    icon: (active: boolean) => (
+      <Icon as={ListBullets} color="inherit" h={active ? '32px' : '24px'} w={active ? '32px' : '24px'} />
+    ),
+    component: NotificationsPage,
   },
   {
     authorized: ['root', 'partner', 'admin', 'csr', 'system'],

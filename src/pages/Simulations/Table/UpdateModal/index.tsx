@@ -1,22 +1,22 @@
 import * as React from 'react';
-import { Box, Flex, Heading, IconButton, SimpleGrid, Tooltip, useToast } from '@chakra-ui/react';
+import { Box, Flex, Heading, IconButton, SimpleGrid, Tooltip, useDisclosure, useToast } from '@chakra-ui/react';
+import { Play, Stop } from '@phosphor-icons/react';
 import axios from 'axios';
 import { Form, Formik, FormikProps } from 'formik';
-import { Play, Stop } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuid } from 'uuid';
 import { SimulationSchema } from '../../utils';
 import { SaveButton } from 'components/Buttons/SaveButton';
+import { ToggleEditButton } from 'components/Buttons/ToggleEditButton';
 import DurationField from 'components/Form/Fields/DurationField';
 import { NumberField } from 'components/Form/Fields/NumberField';
 import { SelectField } from 'components/Form/Fields/SelectField';
 import { StringField } from 'components/Form/Fields/StringField';
 import { Modal } from 'components/Modals/Modal';
-import { DEVICE_TYPES } from 'constants/deviceTypes';
 import { useGetDeviceTypes } from 'hooks/Network/Firmware';
 import {
   Simulation,
-  useGetSimulationStatus,
+  useGetSimulationsStatus,
   useStartSimulation,
   useStopSimulation,
   useUpdateSimulation,
@@ -36,8 +36,8 @@ type Props = {
 const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
+  const { isOpen: isEditing, onToggle: onToggleEditing, onClose: stopEditing } = useDisclosure();
   const getDeviceTypes = useGetDeviceTypes();
-  const deviceTypes = getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES;
   const { form, formRef } = useFormRef();
   const [formKey, setFormKey] = React.useState(uuid());
   const updateSim = useUpdateSimulation();
@@ -46,9 +46,11 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
     operationType: 'update',
     onClose: () => {},
   });
-  const getStatus = useGetSimulationStatus();
+  const getStatus = useGetSimulationsStatus();
   const startSim = useStartSimulation();
   const stopSim = useStopSimulation();
+
+  const currentSimulationStatus = getStatus.data?.find(({ simulationId }) => simulationId === simulation.id);
 
   const handleStartClick = () =>
     startSim.mutate(
@@ -82,7 +84,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
     );
   const handleStopClick = () =>
     stopSim.mutate(
-      { id: getStatus.data?.id ?? '' },
+      { simulationId: simulation.id, runId: currentSimulationStatus?.id ?? '' },
       {
         onSuccess: () => {
           toast({
@@ -113,7 +115,12 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
 
   React.useEffect(() => {
     setFormKey(uuid());
+    stopEditing();
   }, [modalProps.isOpen, simulation]);
+
+  React.useEffect(() => {
+    setFormKey(uuid());
+  }, [isEditing]);
 
   return (
     <Modal
@@ -125,15 +132,22 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
           <SaveButton
             onClick={form.submitForm}
             isLoading={form.isSubmitting}
+            hidden={!isEditing}
             isDisabled={!form.isValid || !form.dirty}
           />
-          {getStatus.data?.simulationId === simulation.id && getStatus.data.state === 'running' ? (
+          <ToggleEditButton
+            toggleEdit={onToggleEditing}
+            isEditing={isEditing}
+            isDisabled={currentSimulationStatus?.state === 'running'}
+          />
+          {currentSimulationStatus && currentSimulationStatus.state === 'running' ? (
             <Tooltip hasArrow label={t('simulation.stop')} placement="top">
               <IconButton
                 aria-label={t('simulation.stop')}
                 colorScheme="yellow"
                 icon={<Stop size={20} />}
                 onClick={handleStopClick}
+                isDisabled={isEditing}
                 isLoading={stopSim.isLoading}
               />
             </Tooltip>
@@ -145,6 +159,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                 icon={<Play size={20} />}
                 onClick={handleStartClick}
                 isLoading={startSim.isLoading}
+                isDisabled={isEditing}
               />
             </Tooltip>
           )}
@@ -156,7 +171,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
           innerRef={formRef as React.Ref<FormikProps<object>>}
           key={formKey}
           initialValues={simulation}
-          validationSchema={SimulationSchema(t, deviceTypes[0])}
+          validationSchema={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0])}
           onSubmit={async (data, { setSubmitting, resetForm }) =>
             updateSim.mutateAsync(
               { ...(data as Partial<Simulation>), id: simulation.id },
@@ -178,11 +193,23 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
           <Form>
             <Box>
               <SimpleGrid minChildWidth="200px" spacing={2} mb={2}>
-                <StringField name="name" label={t('common.name')} isRequired />
-                <StringField name="gateway" label={t('simulation.controller')} isRequired />
-                <NumberField name="threads" label={t('simulation.threads')} w="100px" isRequired />
+                <StringField name="name" label={t('common.name')} isRequired isDisabled={!isEditing} />
+                <StringField name="gateway" label={t('simulation.controller')} isRequired isDisabled={!isEditing} />
+                <NumberField
+                  name="threads"
+                  label={t('simulation.threads')}
+                  w="100px"
+                  isRequired
+                  isDisabled={!isEditing}
+                />
               </SimpleGrid>
-              <DurationField name="simulationLength" label={t('simulation.duration')} isRequired unit="s" />
+              <DurationField
+                name="simulationLength"
+                label={t('simulation.duration')}
+                isRequired
+                unit="s"
+                isDisabled={!isEditing}
+              />
               <Heading size="sm" mt={4}>
                 {t('devices.title')}
               </Heading>
@@ -191,37 +218,75 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                   name="deviceType"
                   label={t('common.type')}
                   options={
-                    deviceTypes.map((v) => ({
+                    getDeviceTypes.data?.deviceTypes?.map((v) => ({
                       value: v,
                       label: v,
                     })) ?? []
                   }
                   isRequired
+                  isDisabled={!isEditing}
                 />
-                <StringField name="macPrefix" label={t('simulation.mac_prefix')} w="110px" isRequired />
-                <NumberField name="devices" label={t('devices.title')} w="100px" isRequired />
-                <NumberField name="concurrentDevices" w="100px" label={t('simulation.concurrent_devices')} isRequired />
+                <StringField
+                  name="macPrefix"
+                  label={t('simulation.mac_prefix')}
+                  w="110px"
+                  isRequired
+                  isDisabled={!isEditing}
+                />
+                <NumberField name="devices" label={t('devices.title')} w="100px" isRequired isDisabled={!isEditing} />
+                <NumberField
+                  name="concurrentDevices"
+                  w="100px"
+                  label={t('simulation.concurrent_devices')}
+                  isRequired
+                  isDisabled={!isEditing}
+                />
               </SimpleGrid>
               <Heading size="sm" mt={4}>
                 {t('configurations.advanced_settings')}
               </Heading>
               <Flex my={2}>
                 <Box mr={2} w="160px">
-                  <NumberField name="minAssociations" label={t('simulation.min_associations')} isRequired />
+                  <NumberField
+                    name="minAssociations"
+                    label={t('simulation.min_associations')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
                 </Box>
                 <Box w="160px">
-                  <NumberField name="maxAssociations" label={t('simulation.max_associations')} isRequired />
+                  <NumberField
+                    name="maxAssociations"
+                    label={t('simulation.max_associations')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
                 </Box>
               </Flex>
               <Flex my={2}>
                 <Box mr={2} w="160px">
-                  <NumberField name="minClients" label={t('simulation.min_clients')} isRequired />
+                  <NumberField
+                    name="minClients"
+                    label={t('simulation.min_clients')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
                 </Box>
                 <Box mr={2} w="160px">
-                  <NumberField name="maxClients" label={t('simulation.max_clients')} isRequired />
+                  <NumberField
+                    name="maxClients"
+                    label={t('simulation.max_clients')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
                 </Box>
                 <Box w="160px">
-                  <NumberField name="clientInterval" label={t('simulation.client_interval')} isRequired />
+                  <NumberField
+                    name="clientInterval"
+                    label={t('simulation.client_interval')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
                 </Box>
               </Flex>
               <Flex my={2}>
@@ -231,10 +296,17 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                     label={t('simulation.healthcheck_interval')}
                     isRequired
                     unit="s"
+                    isDisabled={!isEditing}
                   />
                 </Box>
                 <Box mr={2} w="160px">
-                  <NumberField name="stateInterval" label={t('simulation.state_interval')} isRequired unit="s" />
+                  <NumberField
+                    name="stateInterval"
+                    label={t('simulation.state_interval')}
+                    isRequired
+                    unit="s"
+                    isDisabled={!isEditing}
+                  />
                 </Box>
                 <Box w="160px">
                   <NumberField
@@ -242,11 +314,18 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                     label={t('simulation.reconnect_interval')}
                     isRequired
                     unit="s"
+                    isDisabled={!isEditing}
                   />
                 </Box>
               </Flex>
               <Box w="160px" my={2}>
-                <NumberField name="keepAlive" label={t('simulation.keep_alive')} isRequired unit="s" />
+                <NumberField
+                  name="keepAlive"
+                  label={t('simulation.keep_alive')}
+                  isRequired
+                  unit="s"
+                  isDisabled={!isEditing}
+                />
               </Box>
             </Box>
           </Form>

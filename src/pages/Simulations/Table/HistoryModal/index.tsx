@@ -40,7 +40,7 @@ type Props = {
 const HistoryModal = ({ simulation, modalProps }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
-  const getHistory = useGetSimulationHistory();
+  const getHistory = useGetSimulationHistory({ id: simulation?.id ?? '' });
   const deleteResult = useDeleteSimulationResult();
 
   const handleDeleteClick = (id: string) => () =>
@@ -85,13 +85,13 @@ const HistoryModal = ({ simulation, modalProps }: Props) => {
             <Spinner />
           </Center>
         )}
-        {getHistory.error && (
+        {getHistory.error ? (
           <Alert status="error">
             <AlertIcon />
             <AlertTitle>{t('common.error')}</AlertTitle>
             <AlertDescription>{getHistory.error?.data?.ErrorDescription}</AlertDescription>
           </Alert>
-        )}
+        ) : null}
         {getHistory.data && (
           <Accordion allowMultiple>
             {getHistory.data

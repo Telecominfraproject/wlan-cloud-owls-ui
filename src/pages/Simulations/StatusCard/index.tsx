@@ -3,13 +3,13 @@ import { Alert, AlertDescription, AlertIcon, AlertTitle, Center, Spinner } from 
 import { useTranslation } from 'react-i18next';
 import CurrentlyRunningCard from './CurrentlyRunning';
 import { Card } from 'components/Containers/Card';
-import { useGetSimulationStatus } from 'hooks/Network/Simulations';
+import { useGetSimulationsStatus } from 'hooks/Network/Simulations';
 
 const StatusCard = () => {
   const { t } = useTranslation();
-  const getStatus = useGetSimulationStatus();
+  const getStatus = useGetSimulationsStatus();
 
-  if (getStatus.isLoading) {
+  if (getStatus.isLoading || !getStatus.data) {
     return (
       <Card p={0} h="48px">
         <Center my="auto">
@@ -19,8 +19,9 @@ const StatusCard = () => {
     );
   }
 
-  if (getStatus.data?.state === 'running') {
-    return <CurrentlyRunningCard />;
+  const currentlyRunningStatus = getStatus.data.filter((status) => status.state === 'running');
+  if (currentlyRunningStatus.length > 0) {
+    return <CurrentlyRunningCard currentlyRunningStatus={currentlyRunningStatus} />;
   }
 
   return (

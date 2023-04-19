@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { testMac } from 'helpers/formTests';
 
 export const SimulationSchema = (t: (str: string) => string, defaultType?: string) =>
   Yup.object().shape({
@@ -6,6 +7,7 @@ export const SimulationSchema = (t: (str: string) => string, defaultType?: strin
     gateway: Yup.string().required(t('form.required')).default('https://your-controller-api-endpoint.your_domain.com'),
     macPrefix: Yup.string()
       .required(t('form.required'))
+      .test('macPrefix-valid-mac', t('simulation.mac_prefix_length'), (val) => testMac(`${val}112233`))
       .test('macPrefix-length', t('simulation.mac_prefix_length'), (val) => val?.length === 6)
       .default('AABBCC'),
     healthCheckInterval: Yup.number().required(t('form.required')).moreThan(29).lessThan(6001).integer().default(60),

@@ -1,6 +1,8 @@
 import create from 'zustand';
 import { SocketEventCallback, WebSocketNotification } from './utils';
 import { axiosOwls } from 'constants/axiosInstances';
+import { SimulationStatus } from 'hooks/Network/Simulations';
+import { NotificationType } from 'models/Socket';
 
 export type WebSocketMessage =
   | {
@@ -17,15 +19,14 @@ export type SimulationOperationStatus = {
   msgsTx: number;
   timestamp: Date;
   operationId: string;
-  rawData: {
-    rx: number;
-    tx: number;
-    msgsRx: number;
-    msgsTx: number;
-  };
+  simulationId: string;
+  rawData: SimulationStatus;
 };
 
 export type SimulatorStoreState = {
+  availableLogTypes: NotificationType[];
+  hiddenLogIds: number[];
+  setHiddenLogIds: (logsToHide: number[]) => void;
   lastMessage?: WebSocketMessage;
   allMessages: WebSocketMessage[];
   addMessage: (message: WebSocketNotification) => void;
@@ -36,10 +37,18 @@ export type SimulatorStoreState = {
   startWebSocket: (token: string, tries?: number) => void;
   isWebSocketOpen: boolean;
   setWebSocketOpen: (isOpen: boolean) => void;
-  currentSimulationData: SimulationOperationStatus[];
+  currentSimulationsData: Record<string, SimulationOperationStatus[]>;
 };
 
 export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
+  availableLogTypes: [],
+  hiddenLogIds: [],
+  setHiddenLogIds: (logsToHide: number[]) => {
+    get().send(JSON.stringify({ 'drop-notifications': logsToHide }));
+    set(() => ({
+      hiddenLogIds: logsToHide,
+    }));
+  },
   allMessages: [] as WebSocketMessage[],
   addMessage: (msg: WebSocketNotification) => {
     const obj: WebSocketMessage = {
@@ -47,52 +56,72 @@ export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
       data: msg,
       timestamp: new Date(),
     };
-    const prevContent = get().currentSimulationData;
-    const newSimStatusMsg: SimulationOperationStatus = {
-      rx: 0,
-      tx: 0,
-      msgsRx: 0,
-      msgsTx: 0,
-      timestamp: obj.timestamp,
-      operationId: msg.content.id,
-      rawData: {
-        rx: msg.content.rx,
-        tx: msg.content.tx,
-        msgsRx: msg.content.msgsRx,
-        msgsTx: msg.content.msgsTx,
-      },
-    };
-    const prevEntry = prevContent[Math.max(0, prevContent.length - 1)];
-    if (prevEntry?.operationId === newSimStatusMsg.operationId) {
-      newSimStatusMsg.rx = Math.max(0, newSimStatusMsg.rawData.rx - prevEntry.rawData.rx);
-      newSimStatusMsg.tx = Math.max(0, newSimStatusMsg.rawData.tx - prevEntry.rawData.tx);
-      newSimStatusMsg.msgsRx = Math.max(0, newSimStatusMsg.rawData.msgsRx - prevEntry.rawData.msgsRx);
-      newSimStatusMsg.msgsTx = Math.max(0, newSimStatusMsg.rawData.msgsTx - prevEntry.rawData.msgsTx);
-    }
-    const newCurrSimStatus =
-      prevEntry?.operationId === newSimStatusMsg.operationId ? [...prevContent, newSimStatusMsg] : [newSimStatusMsg];
 
-    const eventsToFire = get().eventListeners.filter(({ type }) => type === msg.type);
+    if (msg.type === 'SIMULATION_STATUS') {
+      const allStoredStatus = get().currentSimulationsData;
+      const newSimStatusMsg: SimulationOperationStatus = {
+        rx: 0,
+        tx: 0,
+        msgsRx: 0,
+        msgsTx: 0,
+        timestamp: obj.timestamp,
+        operationId: msg.content.id,
+        simulationId: msg.content.simulationId,
+        rawData: msg.content,
+      };
 
-    if (eventsToFire.length > 0) {
-      for (const event of eventsToFire) {
-        event.callback();
+      const key = newSimStatusMsg.operationId;
+      if (!allStoredStatus[key]) allStoredStatus[key] = [];
+
+      const prevContent = allStoredStatus[key] as SimulationOperationStatus[];
+      const prevEntry = prevContent[Math.max(0, prevContent.length - 1)];
+      if (prevEntry?.operationId === newSimStatusMsg.operationId) {
+        newSimStatusMsg.rx = Math.max(0, newSimStatusMsg.rawData.rx - prevEntry.rawData.rx);
+        newSimStatusMsg.tx = Math.max(0, newSimStatusMsg.rawData.tx - prevEntry.rawData.tx);
+        newSimStatusMsg.msgsRx = Math.max(0, newSimStatusMsg.rawData.msgsRx - prevEntry.rawData.msgsRx);
+        newSimStatusMsg.msgsTx = Math.max(0, newSimStatusMsg.rawData.msgsTx - prevEntry.rawData.msgsTx);
+      }
+      const newCurrSimStatus =
+        prevEntry?.operationId === newSimStatusMsg.operationId ? [...prevContent, newSimStatusMsg] : [newSimStatusMsg];
+      const newCurrentSimulationData = allStoredStatus;
+      newCurrentSimulationData[key] = newCurrSimStatus.length <= 60 * 10 ? newCurrSimStatus : newCurrSimStatus.slice(1);
+
+      const eventsToFire = get().eventListeners.filter(({ type }) => type === msg.type);
+
+      if (eventsToFire.length > 0) {
+        for (const event of eventsToFire) {
+          event.callback();
+        }
+
+        return set((state) => ({
+          allMessages:
+            state.allMessages.length <= 1000 ? [...state.allMessages, obj] : [...state.allMessages.slice(1), obj],
+          lastMessage: obj,
+          eventListeners: get().eventListeners.filter(
+            ({ id }) => !eventsToFire.find(({ id: findId }) => findId === id),
+          ),
+          currentSimulationsData: newCurrentSimulationData,
+        }));
       }
 
       return set((state) => ({
         allMessages:
           state.allMessages.length <= 1000 ? [...state.allMessages, obj] : [...state.allMessages.slice(1), obj],
         lastMessage: obj,
-        eventListeners: get().eventListeners.filter(({ id }) => !eventsToFire.find(({ id: findId }) => findId === id)),
-        currentSimulationData: newCurrSimStatus.length <= 60 * 10 ? newCurrSimStatus : newCurrSimStatus.slice(1),
+        currentSimulationsData: newCurrentSimulationData,
       }));
+    }
+
+    if (msg.type === 'INITIAL_MESSAGE') {
+      if (msg.message.notificationTypes) {
+        set({ availableLogTypes: msg.message.notificationTypes });
+      }
     }
 
     return set((state) => ({
       allMessages:
         state.allMessages.length <= 1000 ? [...state.allMessages, obj] : [...state.allMessages.slice(1), obj],
       lastMessage: obj,
-      currentSimulationData: newCurrSimStatus.length <= 60 * 10 ? newCurrSimStatus : newCurrSimStatus.slice(1),
     }));
   },
   eventListeners: [] as SocketEventCallback[],
@@ -127,5 +156,5 @@ export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
       }
     }
   },
-  currentSimulationData: [] as SimulationOperationStatus[],
+  currentSimulationsData: {},
 }));
