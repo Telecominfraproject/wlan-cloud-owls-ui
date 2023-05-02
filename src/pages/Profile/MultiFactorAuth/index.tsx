@@ -41,14 +41,14 @@ const MultiFactorAuthProfile = () => {
   };
 
   return (
-    <Card p={4}>
-      <CardHeader mb={2}>
+    <Card>
+      <CardHeader>
         <Heading size="md">{t('account.mfa')}</Heading>
         <Tag colorScheme={currentMfaMethod ? 'green' : 'red'} fontSize="lg" fontWeight="bold" ml={2}>
           {currentMfaMethod ? t('profile.enabled').toUpperCase() : t('profile.disabled').toUpperCase()}
         </Tag>
       </CardHeader>
-      <CardBody display="block">
+      <CardBody display="block" p={4}>
         <VStack spacing={4} divider={<Divider />} mt={4}>
           <Flex w="100%" alignItems="center" justifyContent="center" h="40px">
             <Heading size="sm">Authenticator App</Heading>

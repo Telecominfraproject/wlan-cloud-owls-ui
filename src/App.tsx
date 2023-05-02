@@ -3,6 +3,7 @@ import { Spinner } from '@chakra-ui/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { HashRouter } from 'react-router-dom';
 import { AuthProvider } from 'contexts/AuthProvider';
+import { SecuritySocketProvider } from 'contexts/SecuritySocketProvider';
 import { SimulatorSocketProvider } from 'contexts/SimulatorSocketProvider';
 import Router from 'router';
 
@@ -23,9 +24,11 @@ const App = () => {
       <HashRouter>
         <Suspense fallback={<Spinner />}>
           <AuthProvider token={storageToken !== null ? storageToken : undefined}>
-            <SimulatorSocketProvider>
-              <Router />
-            </SimulatorSocketProvider>
+            <SecuritySocketProvider>
+              <SimulatorSocketProvider>
+                <Router />
+              </SimulatorSocketProvider>
+            </SecuritySocketProvider>
           </AuthProvider>
         </Suspense>
       </HashRouter>

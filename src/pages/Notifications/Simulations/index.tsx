@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import ReactVirtualizedAutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList as List } from 'react-window';
 import { v4 as uuid } from 'uuid';
+import { Card } from 'components/Containers/Card';
 import { CardBody } from 'components/Containers/Card/CardBody';
 import { CardHeader } from 'components/Containers/Card/CardHeader';
 import { useSimulatorStore } from 'contexts/SimulatorSocketProvider/useStore';
@@ -71,8 +72,8 @@ const SimulationsLogCard = () => {
   );
 
   return (
-    <>
-      <CardHeader px={4} pt={4}>
+    <Card>
+      <CardHeader>
         <Spacer />
         <HStack spacing={2}>
           <CSVLink
@@ -85,7 +86,7 @@ const SimulationsLogCard = () => {
           </CSVLink>
         </HStack>
       </CardHeader>
-      <CardBody p={4}>
+      <CardBody>
         <Box overflowX="auto" w="100%">
           <Table size="sm">
             <Thead>
@@ -113,7 +114,7 @@ const SimulationsLogCard = () => {
           </Box>
         </Box>
       </CardBody>
-    </>
+    </Card>
   );
 };
 

@@ -44,15 +44,18 @@ const defaultProps = {
   sortBy: [],
 };
 
-export type DataTableProps = {
-  columns: readonly Column<object>[];
-  data: object[];
+export type DataTableProps<TValue> = {
+  columns: Column<TValue>[];
+  data: TValue[];
   count?: number;
   setPageInfo?: React.Dispatch<React.SetStateAction<PageInfo | undefined>>;
   isLoading?: boolean;
+  onRowClick?: (row: TValue) => void;
+  isRowClickable?: (row: TValue) => boolean;
   obj?: string;
   sortBy?: { id: string; desc: boolean }[];
   hiddenColumns?: string[];
+  hideEmptyListText?: boolean;
   hideControls?: boolean;
   minHeight?: string | number;
   fullScreen?: boolean;
@@ -67,7 +70,7 @@ type TableInstanceWithHooks<T extends object> = TableInstance<T> &
     state: UsePaginationState<T>;
   };
 
-const _DataTable = ({
+const _DataTable = <TValue extends object>({
   columns,
   data,
   isLoading,
@@ -77,15 +80,19 @@ const _DataTable = ({
   sortBy,
   hiddenColumns,
   hideControls,
+  hideEmptyListText,
   count,
   setPageInfo,
   isManual,
   saveSettingsId,
   showAllRows,
-}: DataTableProps) => {
+  onRowClick,
+  isRowClickable,
+}: DataTableProps<TValue>) => {
   const { t } = useTranslation();
   const breakpoint = useBreakpoint();
   const textColor = useColorModeValue('gray.700', 'white');
+  const hoveredRowBg = useColorModeValue('gray.100', 'gray.600');
   const getPageSize = () => {
     try {
       if (showAllRows) return 1000000;
@@ -140,8 +147,12 @@ const _DataTable = ({
     },
     useSortBy,
     usePagination,
-  ) as TableInstanceWithHooks<object>;
+  ) as TableInstanceWithHooks<TValue>;
 
+  const handleGoToPage = (newPage: number) => {
+    if (saveSettingsId) localStorage.setItem(`${saveSettingsId}.page`, String(newPage));
+    gotoPage(newPage);
+  };
   const handleNextPage = () => {
     nextPage();
     if (saveSettingsId) localStorage.setItem(`${saveSettingsId}.page`, String(pageIndex + 1));
@@ -253,10 +264,19 @@ const _DataTable = ({
             </Thead>
             {data.length > 0 && (
               <Tbody {...getTableBodyProps()}>
-                {page.map((row: Row) => {
+                {page.map((row: Row<TValue>) => {
                   prepareRow(row);
+                  const rowIsClickable = isRowClickable ? isRowClickable(row.original) : true;
+                  const onClick = rowIsClickable && onRowClick ? () => onRowClick(row.original) : undefined;
                   return (
-                    <Tr {...row.getRowProps()} key={uuid()}>
+                    <Tr
+                      {...row.getRowProps()}
+                      key={uuid()}
+                      _hover={{
+                        backgroundColor: hoveredRowBg,
+                      }}
+                      onClick={onClick}
+                    >
                       {
                         // @ts-ignore
                         row.cells.map((cell) => (
@@ -275,8 +295,26 @@ const _DataTable = ({
                             fontSize="14px"
                             // @ts-ignore
                             textAlign={cell.column.isCentered ? 'center' : undefined}
-                            // @ts-ignore
-                            fontFamily={cell.column.isMonospace ? 'monospace' : undefined}
+                            fontFamily={
+                              // @ts-ignore
+                              cell.column.isMonospace
+                                ? 'Inter, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+                                : undefined
+                            }
+                            onClick={
+                              // @ts-ignore
+                              cell.column.stopPropagation || (cell.column.id === 'actions' && onRowClick)
+                                ? (e) => {
+                                    e.stopPropagation();
+                                  }
+                                : undefined
+                            }
+                            cursor={
+                              // @ts-ignore
+                              !cell.column.stopPropagation && cell.column.id !== 'actions' && onRowClick
+                                ? 'pointer'
+                                : undefined
+                            }
                           >
                             {cell.render('Cell')}
                           </Td>
@@ -288,7 +326,7 @@ const _DataTable = ({
               </Tbody>
             )}
           </Table>
-          {!isLoading && data.length === 0 && (
+          {!isLoading && data.length === 0 && !hideEmptyListText && (
             <Center>
               {obj ? (
                 <Heading size="md" pt={12}>
@@ -309,7 +347,7 @@ const _DataTable = ({
             <Tooltip label={t('table.first_page')}>
               <IconButton
                 aria-label="Go to first page"
-                onClick={() => gotoPage(0)}
+                onClick={() => handleGoToPage(0)}
                 isDisabled={!canPreviousPage}
                 icon={<ArrowLeftIcon h={3} w={3} />}
                 mr={4}
@@ -347,7 +385,7 @@ const _DataTable = ({
                   max={pageOptions.length}
                   onChange={(_: unknown, numberValue: number) => {
                     const newPage = numberValue ? numberValue - 1 : 0;
-                    gotoPage(newPage);
+                    handleGoToPage(newPage);
                   }}
                   defaultValue={pageIndex + 1}
                 >
@@ -386,7 +424,7 @@ const _DataTable = ({
             <Tooltip label={t('table.last_page')}>
               <IconButton
                 aria-label="Go to last page"
-                onClick={() => gotoPage(pageCount - 1)}
+                onClick={() => handleGoToPage(pageCount - 1)}
                 isDisabled={!canNextPage}
                 icon={<ArrowRightIcon h={3} w={3} />}
                 ml={4}
@@ -401,4 +439,4 @@ const _DataTable = ({
 
 _DataTable.defaultProps = defaultProps;
 
-export const DataTable = React.memo(_DataTable);
+export const DataTable = React.memo(_DataTable) as unknown as typeof _DataTable;
