@@ -115,7 +115,7 @@ const UserTable = () => {
   return (
     <>
       <Card>
-        <CardHeader mb="10px">
+        <CardHeader>
           <Flex w="100%" flexDirection="row" alignItems="center">
             <Box ms="auto">
               <ColumnPicker

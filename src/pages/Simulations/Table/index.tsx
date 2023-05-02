@@ -30,7 +30,7 @@ const SimulationsTable = () => {
   const { query, columns, hiddenColumns } = useSimulationsTable({ onOpenEdit, onOpenHistory });
 
   return (
-    <Card pt={2}>
+    <Card>
       <CardHeader>
         <Heading size="md" my="auto">
           {t('simulation.other')} {query.data ? `(${query.data.list?.length})` : null}

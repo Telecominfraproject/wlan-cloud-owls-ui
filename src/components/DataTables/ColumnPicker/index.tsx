@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { Button, Checkbox, IconButton, Menu, MenuButton, MenuItem, MenuList, useBreakpoint } from '@chakra-ui/react';
+import {
+  Button,
+  Checkbox,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Tooltip,
+  useBreakpoint,
+} from '@chakra-ui/react';
 import { FunnelSimple } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuid } from 'uuid';
@@ -11,10 +21,20 @@ export type ColumnPickerProps = {
   columns: Column<unknown>[];
   hiddenColumns: string[];
   setHiddenColumns: (str: string[]) => void;
+  defaultHiddenColumns?: string[];
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  isCompact?: boolean;
 };
 
-export const ColumnPicker = ({ preference, columns, hiddenColumns, setHiddenColumns, size }: ColumnPickerProps) => {
+export const ColumnPicker = ({
+  preference,
+  columns,
+  hiddenColumns,
+  setHiddenColumns,
+  defaultHiddenColumns = [],
+  size,
+  isCompact = true,
+}: ColumnPickerProps) => {
   const { t } = useTranslation();
   const { getPref, setPref } = useAuth();
   const breakpoint = useBreakpoint();
@@ -29,14 +49,16 @@ export const ColumnPicker = ({ preference, columns, hiddenColumns, setHiddenColu
 
   useEffect(() => {
     const savedPrefs = getPref(preference);
-    setHiddenColumns(savedPrefs ? savedPrefs.split(',') : []);
+    setHiddenColumns(savedPrefs ? savedPrefs.split(',') : defaultHiddenColumns);
   }, []);
 
-  if (breakpoint === 'base' || breakpoint === 'sm') {
+  if (isCompact || breakpoint === 'base' || breakpoint === 'sm') {
     return (
       <Menu closeOnSelect={false}>
-        <MenuButton as={IconButton} size={size} icon={<FunnelSimple />} />
-        <MenuList maxH="200px" overflowY="auto">
+        <Tooltip label={t('common.columns')} hasArrow>
+          <MenuButton as={IconButton} size={size} icon={<FunnelSimple weight="bold" />} />
+        </Tooltip>
+        <MenuList maxH="210px" overflowY="auto">
           {columns.map((column) => (
             <MenuItem key={uuid()} isDisabled={column.alwaysShow} onClick={() => handleColumnClick(column.id)}>
               <Checkbox
