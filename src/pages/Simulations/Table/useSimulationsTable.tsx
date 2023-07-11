@@ -9,9 +9,10 @@ import { Column } from 'models/Table';
 type Props = {
   onOpenEdit: (sim: Simulation) => void;
   onOpenHistory: (sim: Simulation) => void;
+  onOpenDevicesDelete: (sim: Simulation) => void;
 };
 
-const useSimulationsTable = ({ onOpenEdit, onOpenHistory }: Props) => {
+const useSimulationsTable = ({ onOpenEdit, onOpenHistory, onOpenDevicesDelete }: Props) => {
   const { t } = useTranslation();
   const query = useGetSimulations();
   const hiddenColumns = React.useState<string[]>([]);
@@ -31,7 +32,14 @@ const useSimulationsTable = ({ onOpenEdit, onOpenHistory }: Props) => {
     [],
   );
   const actionCell = React.useCallback(
-    (sim: Simulation) => <Actions simulation={sim} openEdit={onOpenEdit} onOpenHistory={onOpenHistory} />,
+    (sim: Simulation) => (
+      <Actions
+        simulation={sim}
+        openEdit={onOpenEdit}
+        onOpenHistory={onOpenHistory}
+        onOpenDevicesDelete={onOpenDevicesDelete}
+      />
+    ),
     [],
   );
 

@@ -12,7 +12,7 @@ export type Simulation = {
   id: string;
   keepAlive: number;
   key: string;
-  macPrefix: number;
+  macPrefix: string;
   minAssociations: number;
   maxAssociations: number;
   minClients: number;

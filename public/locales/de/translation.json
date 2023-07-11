@@ -544,6 +544,8 @@
 		},
 		"radius": {
 			"calling_station_id": "Stations",
+			"disconnect": "Trennen",
+			"disconnect_success": "Radius-Sitzung getrennt!",
 			"input_octets": "Eingang",
 			"output_octets": "Ausgabe",
 			"radius_clients": "Radius-Kunden",
@@ -642,6 +644,7 @@
 		"notifications": "Gerätebenachrichtigungen",
 		"one": "Gerät",
 		"reassign_already_owned": "Geräte neu zuweisen, die bereits vorhanden sind und einem anderen Unternehmen/Veranstaltungsort/Abonnenten gehören?",
+		"reboot_logs": "Neustartprotokolle",
 		"restricted": "Beschränkt",
 		"restricted_overriden": "Dies ist ein eingeschränktes Gerät, aber es befindet sich im Entwicklungsmodus. Alle Einschränkungen werden derzeit ignoriert",
 		"restrictions_overriden_title": "Dev-Modus",
@@ -1005,6 +1008,9 @@
 		"current_live_devices": "Aktuelle Live-Geräte",
 		"currently_running_one": "Derzeit wird {{count}} Simulation ausgeführt",
 		"currently_running_other": "Derzeit laufen {{count}} Simulationen",
+		"delete_devices_confirm": "Sind Sie sicher, dass Sie alle Geräte und deren Statistiken vom Gateway entfernen möchten? Diese Aktion ist nicht rückgängig zu machen",
+		"delete_devices_loading": "Dieser Vorgang kann bis zu 5 Minuten dauern",
+		"delete_simulation_devices": "Geräte löschen",
 		"delete_success": "Gelöschte Simulation!",
 		"duration": "Dauer",
 		"error_devices": "Fehler Geräte",
@@ -1043,6 +1049,7 @@
 	},
 	"statistics": {
 		"last_stats": "Letzte Statistik",
+		"latest": "Neueste Statistiken",
 		"memory": "Erinnerung"
 	},
 	"subscribers": {

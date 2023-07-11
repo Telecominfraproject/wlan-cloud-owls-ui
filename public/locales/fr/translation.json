@@ -544,6 +544,8 @@
 		},
 		"radius": {
 			"calling_station_id": "Station",
+			"disconnect": "déconnecter",
+			"disconnect_success": "Session Radius déconnectée !",
 			"input_octets": "Contribution",
 			"output_octets": "Sortie",
 			"radius_clients": "Clients rayon",
@@ -642,6 +644,7 @@
 		"notifications": "notifications de l'appareil",
 		"one": "Dispositif",
 		"reassign_already_owned": "Réattribuer des appareils qui existent déjà et qui appartiennent à une autre entité/salle/abonné ?",
+		"reboot_logs": "Journaux de redémarrage",
 		"restricted": "Limité",
 		"restricted_overriden": "Il s'agit d'un appareil restreint, mais il est en mode développement. Toutes les restrictions sont actuellement ignorées",
 		"restrictions_overriden_title": "Mode développement",
@@ -1005,6 +1008,9 @@
 		"current_live_devices": "Appareils en direct actuels",
 		"currently_running_one": "Il y a actuellement {{count}} simulation en cours",
 		"currently_running_other": "Il y a actuellement {{count}}  simulations en cours d'exécution",
+		"delete_devices_confirm": "Voulez-vous vraiment supprimer tous les appareils et leurs statistiques de la passerelle ? Cette action n'est pas réversible",
+		"delete_devices_loading": "Ce processus peut prendre jusqu'à 5 minutes",
+		"delete_simulation_devices": "Supprimer des appareils",
 		"delete_success": "Simulation supprimée !",
 		"duration": "Durée",
 		"error_devices": "Périphériques d'erreur",
@@ -1043,6 +1049,7 @@
 	},
 	"statistics": {
 		"last_stats": "Dernières statistiques",
+		"latest": "Dernières statistiques",
 		"memory": "mémoire"
 	},
 	"subscribers": {

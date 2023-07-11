@@ -544,6 +544,8 @@
 		},
 		"radius": {
 			"calling_station_id": "Station",
+			"disconnect": "Disconnect",
+			"disconnect_success": "Radius session disconnected!",
 			"input_octets": "Input",
 			"output_octets": "Output",
 			"radius_clients": "Radius Clients",
@@ -642,6 +644,7 @@
 		"notifications": "Device Notifications",
 		"one": "Device",
 		"reassign_already_owned": "Reassign devices which already exist and are owned by another entity/venue/subscriber?",
+		"reboot_logs": "Reboot Logs",
 		"restricted": "Restricted",
 		"restricted_overriden": "This is a restricted device, but it is in development mode. All restrictions are currently ignored",
 		"restrictions_overriden_title": "Dev Mode",
@@ -1005,6 +1008,9 @@
 		"current_live_devices": "Current Live Devices",
 		"currently_running_one": "There is currently {{count}} simulation running",
 		"currently_running_other": "There are currently {{count}} simulations running",
+		"delete_devices_confirm": "Are you sure you want to remove all devices and their statistics from the gateway? This action is not reversible",
+		"delete_devices_loading": "This process may take up to 5 minutes",
+		"delete_simulation_devices": "Delete Devices",
 		"delete_success": "Deleted Simulation!",
 		"duration": "Duration",
 		"error_devices": "Error Devices",
@@ -1043,6 +1049,7 @@
 	},
 	"statistics": {
 		"last_stats": "Last Statistics",
+		"latest": "Latest Statistics",
 		"memory": "Memory"
 	},
 	"subscribers": {
