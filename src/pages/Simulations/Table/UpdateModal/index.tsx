@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Flex, Heading, IconButton, SimpleGrid, Tooltip, useDisclosure, useToast } from '@chakra-ui/react';
-import { Play, Stop } from '@phosphor-icons/react';
+import { Broom, Play, Stop } from '@phosphor-icons/react';
 import axios from 'axios';
 import { Form, Formik, FormikProps } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -31,9 +31,10 @@ type Props = {
     onClose: () => void;
   };
   simulation: Simulation;
+  onOpenDevicesDelete: (sim: Simulation) => void;
 };
 
-const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
+const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const { isOpen: isEditing, onToggle: onToggleEditing, onClose: stopEditing } = useDisclosure();
@@ -51,6 +52,10 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
   const stopSim = useStopSimulation();
 
   const currentSimulationStatus = getStatus.data?.find(({ simulationId }) => simulationId === simulation.id);
+
+  const handleDeleteDevicesClick = () => {
+    onOpenDevicesDelete(simulation);
+  };
 
   const handleStartClick = () =>
     startSim.mutate(
@@ -140,6 +145,15 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
             isEditing={isEditing}
             isDisabled={currentSimulationStatus?.state === 'running'}
           />
+          <Tooltip hasArrow label={t('simulation.delete_simulation_devices')} placement="top">
+            <IconButton
+              aria-label={t('simulation.delete_simulation_devices')}
+              colorScheme="yellow"
+              icon={<Broom size={20} />}
+              isDisabled={currentSimulationStatus?.state === 'running'}
+              onClick={handleDeleteDevicesClick}
+            />
+          </Tooltip>
           {currentSimulationStatus && currentSimulationStatus.state === 'running' ? (
             <Tooltip hasArrow label={t('simulation.stop')} placement="top">
               <IconButton
