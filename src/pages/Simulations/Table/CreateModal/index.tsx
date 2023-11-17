@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Flex, Heading, SimpleGrid } from '@chakra-ui/react';
+import { Box, Flex, Heading, SimpleGrid, Wrap, WrapItem } from '@chakra-ui/react';
 import { Form, Formik, FormikProps } from 'formik';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuid } from 'uuid';
@@ -12,6 +12,7 @@ import { SelectField } from 'components/Form/Fields/SelectField';
 import { StringField } from 'components/Form/Fields/StringField';
 import { ConfirmCloseAlertModal } from 'components/Modals/ConfirmCloseAlert';
 import { Modal } from 'components/Modals/Modal';
+import { DEVICE_TYPES } from 'constants/deviceTypes';
 import { useGetDeviceTypes } from 'hooks/Network/Firmware';
 import { Simulation, useCreateSimulation } from 'hooks/Network/Simulations';
 import { useFormModal } from 'hooks/useFormModal';
@@ -51,8 +52,8 @@ const CreateSimulationModal = () => {
         <Formik
           innerRef={formRef as React.Ref<FormikProps<object>>}
           key={formKey}
-          initialValues={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0]).cast(undefined)}
-          validationSchema={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0])}
+          initialValues={SimulationSchema(t, (getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES)[0]).cast(undefined)}
+          validationSchema={SimulationSchema(t, (getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES)[0])}
           onSubmit={async (data, { setSubmitting, resetForm }) =>
             createSim.mutateAsync(data as Partial<Simulation>, {
               onSuccess: () => {
@@ -79,46 +80,59 @@ const CreateSimulationModal = () => {
               <Heading size="sm" mt={4}>
                 {t('devices.title')}
               </Heading>
-              <SimpleGrid minChildWidth="200px" spacing={2}>
-                <SelectField
-                  name="deviceType"
-                  label={t('common.type')}
-                  options={
-                    getDeviceTypes.data?.deviceTypes?.map((v) => ({
-                      value: v,
-                      label: v,
-                    })) ?? []
-                  }
-                  isRequired
-                />
-                <StringField name="macPrefix" label={t('simulation.mac_prefix')} w="110px" isRequired />
-                <NumberField name="devices" label={t('devices.title')} w="100px" isRequired />
-                <NumberField name="concurrentDevices" w="100px" label={t('simulation.concurrent_devices')} isRequired />
-              </SimpleGrid>
+              <Wrap>
+                <WrapItem>
+                  <SelectField
+                    name="deviceType"
+                    label={t('common.type')}
+                    options={
+                      (getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES).map((v) => ({
+                        value: v,
+                        label: v,
+                      })) ?? []
+                    }
+                    isRequired
+                  />
+                </WrapItem>
+                <WrapItem>
+                  <StringField name="macPrefix" label={t('simulation.mac_prefix')} w="120px" isRequired />
+                </WrapItem>
+                <WrapItem>
+                  <NumberField name="devices" label={t('devices.title')} w="100px" isRequired />
+                </WrapItem>
+                <WrapItem>
+                  <NumberField
+                    name="concurrentDevices"
+                    w="100px"
+                    label={t('simulation.concurrent_devices')}
+                    isRequired
+                  />
+                </WrapItem>
+              </Wrap>
               <Heading size="sm" mt={4}>
                 {t('configurations.advanced_settings')}
               </Heading>
               <Flex my={2}>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField name="minAssociations" label={t('simulation.min_associations')} isRequired />
                 </Box>
-                <Box w="160px">
+                <Box w="170px">
                   <NumberField name="maxAssociations" label={t('simulation.max_associations')} isRequired />
                 </Box>
               </Flex>
               <Flex my={2}>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField name="minClients" label={t('simulation.min_clients')} isRequired />
                 </Box>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField name="maxClients" label={t('simulation.max_clients')} isRequired />
                 </Box>
-                <Box w="160px">
+                <Box w="170px">
                   <NumberField name="clientInterval" label={t('simulation.client_interval')} isRequired />
                 </Box>
               </Flex>
               <Flex my={2}>
-                <Box mr={2} w="180px">
+                <Box mr={2} w="190px">
                   <NumberField
                     name="healthCheckInterval"
                     label={t('simulation.healthcheck_interval')}
@@ -129,7 +143,7 @@ const CreateSimulationModal = () => {
                 <Box mr={2} w="160px">
                   <NumberField name="stateInterval" label={t('simulation.state_interval')} isRequired unit="s" />
                 </Box>
-                <Box w="160px">
+                <Box w="180px">
                   <NumberField
                     name="reconnectInterval"
                     label={t('simulation.reconnect_interval')}

@@ -2,9 +2,9 @@ import * as React from 'react';
 import { Box, Spacer } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import Actions from './Actions';
+import { DataGridColumn, useDataGrid } from 'components/DataTables/DataGrid/useDataGrid';
 import NumberCell from 'components/TableCells/NumberCell';
 import { Simulation, useGetSimulations } from 'hooks/Network/Simulations';
-import { Column } from 'models/Table';
 
 type Props = {
   onOpenEdit: (sim: Simulation) => void;
@@ -12,10 +12,82 @@ type Props = {
   onOpenDevicesDelete: (sim: Simulation) => void;
 };
 
-const useSimulationsTable = ({ onOpenEdit, onOpenHistory, onOpenDevicesDelete }: Props) => {
+const useSimulationsTable = ({ onOpenEdit, onOpenHistory }: Props) => {
   const { t } = useTranslation();
   const query = useGetSimulations();
-  const hiddenColumns = React.useState<string[]>([]);
+  const tableController = useDataGrid({
+    tableSettingsId: 'simulator.simulations.table',
+    defaultOrder: [
+      'name',
+      'gateway',
+      'devices',
+      'deviceType',
+      'macPrefix',
+      'minAssociations',
+      'maxAssociations',
+      'minClients',
+      'maxClients',
+      'length',
+      'actions',
+    ],
+    columnWidthsSettings: {
+      name: {
+        minWidth: 200,
+        suggestedWidth: 200,
+        maxWidth: 600,
+      },
+      gateway: {
+        minWidth: 200,
+        suggestedWidth: 230,
+        maxWidth: 600,
+      },
+      devices: {
+        minWidth: 50,
+        suggestedWidth: 80,
+        maxWidth: 100,
+      },
+      deviceType: {
+        minWidth: 50,
+        suggestedWidth: 140,
+        maxWidth: 600,
+      },
+      macPrefix: {
+        minWidth: 50,
+        suggestedWidth: 70,
+        maxWidth: 100,
+      },
+      minAssociations: {
+        minWidth: 50,
+        suggestedWidth: 90,
+        maxWidth: 100,
+      },
+      maxAssociations: {
+        minWidth: 50,
+        suggestedWidth: 90,
+        maxWidth: 100,
+      },
+      minClients: {
+        minWidth: 50,
+        suggestedWidth: 120,
+        maxWidth: 200,
+      },
+      maxClients: {
+        minWidth: 50,
+        suggestedWidth: 120,
+        maxWidth: 200,
+      },
+      length: {
+        minWidth: 50,
+        suggestedWidth: 95,
+        maxWidth: 100,
+      },
+      actions: {
+        minWidth: 165,
+        suggestedWidth: 165,
+        maxWidth: 165,
+      },
+    },
+  });
 
   const numberCell = React.useCallback(
     (v: number, suffix?: string) => (
@@ -32,120 +104,120 @@ const useSimulationsTable = ({ onOpenEdit, onOpenHistory, onOpenDevicesDelete }:
     [],
   );
   const actionCell = React.useCallback(
-    (sim: Simulation) => (
-      <Actions
-        simulation={sim}
-        openEdit={onOpenEdit}
-        onOpenHistory={onOpenHistory}
-        onOpenDevicesDelete={onOpenDevicesDelete}
-      />
-    ),
+    (sim: Simulation) => <Actions simulation={sim} openEdit={onOpenEdit} onOpenHistory={onOpenHistory} />,
     [],
   );
 
-  const columns: Column<Simulation>[] = React.useMemo(
-    (): Column<Simulation>[] => [
+  const columns: DataGridColumn<Simulation>[] = React.useMemo(
+    (): DataGridColumn<Simulation>[] => [
       {
         id: 'name',
-        Header: t('common.name'),
-        Footer: '',
-        accessor: 'name',
-        alwaysShow: true,
+        header: t('common.name'),
+        accessorKey: 'name',
+        meta: {
+          anchored: true,
+          alwaysShow: true,
+        },
       },
       {
         id: 'gateway',
-        Header: t('simulation.controller'),
-        Footer: '',
-        accessor: 'gateway',
-        disableSortBy: true,
+        header: t('simulation.controller'),
+        accessorKey: 'gateway',
+        enableSorting: false,
       },
       {
         id: 'devices',
-        Header: t('devices.title'),
-        Footer: '',
-        accessor: 'devices',
-        Cell: (v) => numberCell(v.cell.row.original.devices),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: t('devices.title'),
+        accessorKey: 'devices',
+        cell: (v) => numberCell(v.cell.row.original.devices),
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'deviceType',
-        Header: t('common.type'),
-        Footer: '',
-        accessor: 'deviceType',
-        customWidth: '50px',
-        disableSortBy: true,
-      },
-      {
-        id: 'stateInterval',
-        Header: t('simulation.state_interval'),
-        Footer: '',
-        accessor: 'stateInterval',
-        Cell: (v) => numberCell(v.cell.row.original.stateInterval, 's'),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: t('common.type'),
+        accessorKey: 'deviceType',
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'macPrefix',
-        Header: t('simulation.mac_prefix'),
-        Footer: '',
-        accessor: 'macPrefix',
-        customWidth: '50px',
-        isMonospace: true,
-        disableSortBy: true,
+        header: 'MAC',
+        accessorKey: 'macPrefix',
+        meta: {
+          customWidth: '50px',
+          isMonospace: true,
+          columnSelectorOptions: {
+            label: 'MAC Prefix',
+          },
+          headerOptions: {
+            tooltip: t('simulation.mac_prefix'),
+          },
+        },
+        enableSorting: false,
       },
       {
         id: 'minAssociations',
-        Header: t('simulation.min_associations'),
-        Footer: '',
-        accessor: 'minAssociations',
-        Cell: (v) => numberCell(v.cell.row.original.minAssociations),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: 'Min. UEs',
+        accessorKey: 'minAssociations',
+        cell: (v) => numberCell(v.cell.row.original.minAssociations),
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'maxAssociations',
-        Header: t('simulation.max_associations'),
-        Footer: '',
-        accessor: 'maxAssociations',
-        Cell: (v) => numberCell(v.cell.row.original.maxAssociations),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: 'Max. UEs',
+        accessorKey: 'maxAssociations',
+        cell: (v) => numberCell(v.cell.row.original.maxAssociations),
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'minClients',
-        Header: t('simulation.min_clients'),
-        Footer: '',
-        accessor: 'minClients',
-        Cell: (v) => numberCell(v.cell.row.original.minClients),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: t('simulation.min_clients'),
+        accessorKey: 'minClients',
+        cell: (v) => numberCell(v.cell.row.original.minClients),
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'maxClients',
-        Header: t('simulation.max_clients'),
-        Footer: '',
-        accessor: 'maxClients',
-        Cell: (v) => numberCell(v.cell.row.original.maxClients),
-        customWidth: '50px',
-        disableSortBy: true,
+        header: t('simulation.max_clients'),
+        accessorKey: 'maxClients',
+        cell: (v) => numberCell(v.cell.row.original.maxClients),
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'length',
-        Header: t('simulation.duration'),
-        Footer: '',
-        Cell: (v) => durationCell(v.cell.row.original.simulationLength),
-        accessor: 'length',
-        customWidth: '50px',
-        disableSortBy: true,
+        header: t('simulation.duration'),
+        cell: (v) => durationCell(v.cell.row.original.simulationLength),
+        accessorKey: 'length',
+        meta: {
+          customWidth: '50px',
+        },
+        enableSorting: false,
       },
       {
         id: 'actions',
-        Header: t('common.actions'),
-        Footer: '',
-        Cell: (v) => actionCell(v.cell.row.original),
-        disableSortBy: true,
-        customWidth: '120px',
+        header: t('common.actions'),
+        cell: (v) => actionCell(v.cell.row.original),
+        enableSorting: false,
+        meta: {
+          customWidth: '110px',
+        },
       },
     ],
     [t],
@@ -155,9 +227,9 @@ const useSimulationsTable = ({ onOpenEdit, onOpenHistory, onOpenDevicesDelete }:
     () => ({
       query,
       columns,
-      hiddenColumns,
+      tableController,
     }),
-    [query, columns, hiddenColumns],
+    [query, columns, tableController],
   );
 };
 
