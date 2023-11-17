@@ -33,6 +33,7 @@ export type SimulatorStoreState = {
   eventListeners: SocketEventCallback[];
   addEventListeners: (callback: SocketEventCallback[]) => void;
   webSocket?: WebSocket;
+  websocketTimer: NodeJS.Timeout | null;
   send: (str: string) => void;
   startWebSocket: (token: string, tries?: number) => void;
   isWebSocketOpen: boolean;
@@ -133,27 +134,31 @@ export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
     const ws = get().webSocket;
     if (ws) ws.send(str);
   },
-  startWebSocket: (token: string, tries = 0) => {
-    const newTries = tries + 1;
-    if (tries <= 10) {
-      set({
-        webSocket: new WebSocket(
-          `${
-            axiosOwls?.defaults?.baseURL ? axiosOwls.defaults.baseURL.replace('https', 'wss').replace('http', 'ws') : ''
-          }/ws`,
-        ),
-      });
-      const ws = get().webSocket;
-      if (ws) {
-        ws.onopen = () => {
-          set({ isWebSocketOpen: true });
-          ws.send(`token:${token}`);
-        };
-        ws.onclose = () => {
-          set({ isWebSocketOpen: false });
-          setTimeout(() => get().startWebSocket(token, newTries), 3000);
-        };
-      }
+  websocketTimer: null,
+  startWebSocket: (token: string) => {
+    set({
+      webSocket: new WebSocket(
+        `${
+          axiosOwls?.defaults?.baseURL ? axiosOwls.defaults.baseURL.replace('https', 'wss').replace('http', 'ws') : ''
+        }/ws`,
+      ),
+    });
+    const ws = get().webSocket;
+    if (ws) {
+      ws.onopen = () => {
+        const timer = get().websocketTimer;
+        if (timer) clearTimeout(timer);
+        set({ isWebSocketOpen: true, websocketTimer: null });
+        ws.send(`token:${token}`);
+      };
+      ws.onclose = () => {
+        const timer = get().websocketTimer;
+        if (timer) clearTimeout(timer);
+        set({
+          isWebSocketOpen: false,
+          websocketTimer: setInterval(() => get().startWebSocket(token), 60 * 1000),
+        });
+      };
     }
   },
   currentSimulationsData: {},

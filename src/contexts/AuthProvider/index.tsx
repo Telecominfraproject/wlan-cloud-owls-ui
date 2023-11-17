@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { AuthProviderProps, AuthProviderReturn, useGetConfigurationDescriptions } from './utils';
+import { AuthProviderProps, AuthProviderReturn, getOwlsAdmin, useGetConfigurationDescriptions } from './utils';
 import {
   axiosAnalytics,
   axiosFms,
@@ -24,16 +24,23 @@ import { Preference } from 'models/Preference';
 
 const AuthContext = React.createContext({} as AuthProviderReturn);
 
-export const AuthProvider = ({ token, children }: AuthProviderProps) => {
+export const AuthProvider = ({ token, defaultEndpoints, children }: AuthProviderProps) => {
   const ref = useRef();
-  const [loadedEndpoints, setLoadedEndpoints] = useState(false);
+  const [loadedEndpoints, setLoadedEndpoints] = useState(defaultEndpoints !== undefined);
   const [currentToken, setCurrentToken] = useState(token);
-  const [endpoints, setEndpoints] = useState<{ [key: string]: string } | null>(null);
-  const { data: configurationDescriptions } = useGetConfigurationDescriptions({ enabled: loadedEndpoints });
+  const [endpoints, setEndpoints] = useState<{ [key: string]: string } | null>(defaultEndpoints ?? null);
+  const { data: configurationDescriptions } = useGetConfigurationDescriptions({
+    enabled: loadedEndpoints && defaultEndpoints === undefined,
+  });
   const { data: user, refetch: refetchUser } = useGetProfile();
   const { refetch: refetchEndpoints } = useGetEndpoints({
-    onSuccess: (newEndpoints: Endpoint[]) => {
+    onSuccess: async (newEndpoints: Endpoint[]) => {
       const foundEndpoints: { [key: string]: string } = {};
+      // @ts-ignore
+      const owlsAdmin = await getOwlsAdmin(newEndpoints, axiosSec.defaults.headers.common.Authorization ?? '');
+      if (owlsAdmin) {
+        axiosOwls.defaults.baseURL = `${owlsAdmin.uri}/api/v1`;
+      }
       for (const endpoint of newEndpoints) {
         foundEndpoints[endpoint.type] = endpoint.uri;
         switch (endpoint.type) {
@@ -49,17 +56,11 @@ export const AuthProvider = ({ token, children }: AuthProviderProps) => {
           case 'owsub':
             axiosSub.defaults.baseURL = `${endpoint.uri}/api/v1`;
             break;
-          case 'owls':
-            axiosOwls.defaults.baseURL = `${endpoint.uri}/api/v1`;
-            break;
           case 'owanalytics':
             axiosAnalytics.defaults.baseURL = `${endpoint.uri}/api/v1`;
             break;
           case 'owinstaller':
             axiosInstaller.defaults.baseURL = `${endpoint.uri}/api/v1`;
-            break;
-          case 'owrrm':
-            axiosRrm.defaults.baseURL = `${endpoint.uri}/api/v1`;
             break;
           default:
             break;
@@ -89,7 +90,7 @@ export const AuthProvider = ({ token, children }: AuthProviderProps) => {
     return null;
   };
 
-  const setPref = ({ preference, value }: { preference: string; value: string }) => {
+  const setPref = async ({ preference, value }: { preference: string; value: string }) => {
     let updated = false;
     if (preferences) {
       const newPreferences: Preference[] = preferences.map((pref: Preference) => {
@@ -102,15 +103,41 @@ export const AuthProvider = ({ token, children }: AuthProviderProps) => {
 
       if (!updated) newPreferences.push({ tag: preference, value });
 
-      updatePreferences.mutateAsync(newPreferences);
+      await updatePreferences.mutateAsync(newPreferences);
     }
   };
 
-  const deletePref = (preference: string) => {
+  const setPrefs = async (preferencesToUpdate: Preference[]) => {
     if (preferences) {
-      const newPreferences: Preference[] = preferences.filter((pref: Preference) => pref.tag !== preference);
+      const updatedPreferences: string[] = [];
+      const newPreferences = preferences.map((pref: Preference) => {
+        const preferenceToUpdate = preferencesToUpdate.find(
+          (prefToUpdate: Preference) => prefToUpdate.tag === pref.tag,
+        );
+        if (preferenceToUpdate) {
+          updatedPreferences.push(pref.tag);
+          return { tag: pref.tag, value: preferenceToUpdate.value };
+        }
+        return pref;
+      });
 
-      updatePreferences.mutateAsync(newPreferences);
+      for (const preferenceToUpdate of preferencesToUpdate) {
+        if (!updatedPreferences.includes(preferenceToUpdate.tag)) {
+          newPreferences.push(preferenceToUpdate);
+        }
+      }
+
+      await updatePreferences.mutateAsync(newPreferences);
+    }
+  };
+
+  const deletePref = async (preference: string | string[]) => {
+    if (preferences) {
+      const newPreferences: Preference[] = preferences.filter((pref: Preference) =>
+        typeof preference === 'string' ? pref.tag !== preference : !preference.includes(pref.tag),
+      );
+
+      await updatePreferences.mutateAsync(newPreferences);
     }
   };
 
@@ -126,7 +153,7 @@ export const AuthProvider = ({ token, children }: AuthProviderProps) => {
       axiosInstaller.defaults.headers.common.Authorization = `Bearer ${currentToken}`;
       axiosRrm.defaults.headers.common.Authorization = `Bearer ${currentToken}`;
       refetchUser();
-      refetchEndpoints();
+      if (defaultEndpoints === undefined) refetchEndpoints();
     }
   }, [currentToken]);
 
@@ -146,6 +173,7 @@ export const AuthProvider = ({ token, children }: AuthProviderProps) => {
       ref,
       getPref,
       setPref,
+      setPrefs,
       deletePref,
       endpoints,
       configurationDescriptions,

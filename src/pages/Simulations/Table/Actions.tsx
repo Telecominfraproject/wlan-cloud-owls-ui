@@ -17,7 +17,7 @@ import {
   useToast,
   HStack,
 } from '@chakra-ui/react';
-import { Broom, ClockCounterClockwise, MagnifyingGlass, Play, Stop, Trash } from '@phosphor-icons/react';
+import { ClockCounterClockwise, MagnifyingGlass, Play, Stop, Trash } from '@phosphor-icons/react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
@@ -32,10 +32,9 @@ interface Props {
   simulation: Simulation;
   openEdit: (sim: Simulation) => void;
   onOpenHistory: (sim: Simulation) => void;
-  onOpenDevicesDelete: (sim: Simulation) => void;
 }
 
-const Actions = ({ simulation, openEdit, onOpenHistory, onOpenDevicesDelete }: Props) => {
+const Actions = ({ simulation, openEdit, onOpenHistory }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -52,9 +51,9 @@ const Actions = ({ simulation, openEdit, onOpenHistory, onOpenDevicesDelete }: P
   const handleHistoryClick = () => {
     onOpenHistory(simulation);
   };
-  const handleDeleteDevicesClick = () => {
-    onOpenDevicesDelete(simulation);
-  };
+  // const handleDeleteDevicesClick = () => {
+  //   onOpenDevicesDelete(simulation);
+  // };
 
   const handleStartClick = () =>
     startSim.mutate(
@@ -200,7 +199,7 @@ const Actions = ({ simulation, openEdit, onOpenHistory, onOpenDevicesDelete }: P
           </PopoverFooter>
         </PopoverContent>
       </Popover>
-      <Tooltip hasArrow label={t('simulation.delete_simulation_devices')} placement="top">
+      {/* <Tooltip hasArrow label={t('simulation.delete_simulation_devices')} placement="top">
         <IconButton
           aria-label={t('simulation.delete_simulation_devices')}
           colorScheme="yellow"
@@ -209,7 +208,7 @@ const Actions = ({ simulation, openEdit, onOpenHistory, onOpenDevicesDelete }: P
           isDisabled={currentSimulationStatus?.state === 'running'}
           onClick={handleDeleteDevicesClick}
         />
-      </Tooltip>
+      </Tooltip> */}
       <Tooltip hasArrow label={t('simulation.view_previous_runs')} placement="top">
         <IconButton
           aria-label="view-simulation-prev-runs"

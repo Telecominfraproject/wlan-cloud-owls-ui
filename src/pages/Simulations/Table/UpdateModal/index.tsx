@@ -1,6 +1,17 @@
 import * as React from 'react';
-import { Box, Flex, Heading, IconButton, SimpleGrid, Tooltip, useDisclosure, useToast } from '@chakra-ui/react';
-import { Broom, Play, Stop } from '@phosphor-icons/react';
+import {
+  Box,
+  Flex,
+  Heading,
+  IconButton,
+  SimpleGrid,
+  Tooltip,
+  Wrap,
+  WrapItem,
+  useDisclosure,
+  useToast,
+} from '@chakra-ui/react';
+import { Play, Stop } from '@phosphor-icons/react';
 import axios from 'axios';
 import { Form, Formik, FormikProps } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +24,7 @@ import { NumberField } from 'components/Form/Fields/NumberField';
 import { SelectField } from 'components/Form/Fields/SelectField';
 import { StringField } from 'components/Form/Fields/StringField';
 import { Modal } from 'components/Modals/Modal';
+import { DEVICE_TYPES } from 'constants/deviceTypes';
 import { useGetDeviceTypes } from 'hooks/Network/Firmware';
 import {
   Simulation,
@@ -31,10 +43,9 @@ type Props = {
     onClose: () => void;
   };
   simulation: Simulation;
-  onOpenDevicesDelete: (sim: Simulation) => void;
 };
 
-const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: Props) => {
+const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
   const { t } = useTranslation();
   const toast = useToast();
   const { isOpen: isEditing, onToggle: onToggleEditing, onClose: stopEditing } = useDisclosure();
@@ -53,9 +64,9 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
 
   const currentSimulationStatus = getStatus.data?.find(({ simulationId }) => simulationId === simulation.id);
 
-  const handleDeleteDevicesClick = () => {
-    onOpenDevicesDelete(simulation);
-  };
+  // const handleDeleteDevicesClick = () => {
+  //   onOpenDevicesDelete(simulation);
+  // };
 
   const handleStartClick = () =>
     startSim.mutate(
@@ -145,7 +156,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
             isEditing={isEditing}
             isDisabled={currentSimulationStatus?.state === 'running'}
           />
-          <Tooltip hasArrow label={t('simulation.delete_simulation_devices')} placement="top">
+          {/* <Tooltip hasArrow label={t('simulation.delete_simulation_devices')} placement="top">
             <IconButton
               aria-label={t('simulation.delete_simulation_devices')}
               colorScheme="yellow"
@@ -153,7 +164,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
               isDisabled={currentSimulationStatus?.state === 'running'}
               onClick={handleDeleteDevicesClick}
             />
-          </Tooltip>
+          </Tooltip> */}
           {currentSimulationStatus && currentSimulationStatus.state === 'running' ? (
             <Tooltip hasArrow label={t('simulation.stop')} placement="top">
               <IconButton
@@ -185,7 +196,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
           innerRef={formRef as React.Ref<FormikProps<object>>}
           key={formKey}
           initialValues={simulation}
-          validationSchema={SimulationSchema(t, getDeviceTypes.data?.deviceTypes?.[0])}
+          validationSchema={SimulationSchema(t, (getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES)[0])}
           onSubmit={async (data, { setSubmitting, resetForm }) =>
             updateSim.mutateAsync(
               { ...(data as Partial<Simulation>), id: simulation.id },
@@ -227,40 +238,48 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
               <Heading size="sm" mt={4}>
                 {t('devices.title')}
               </Heading>
-              <SimpleGrid minChildWidth="200px" spacing={2}>
-                <SelectField
-                  name="deviceType"
-                  label={t('common.type')}
-                  options={
-                    getDeviceTypes.data?.deviceTypes?.map((v) => ({
-                      value: v,
-                      label: v,
-                    })) ?? []
-                  }
-                  isRequired
-                  isDisabled={!isEditing}
-                />
-                <StringField
-                  name="macPrefix"
-                  label={t('simulation.mac_prefix')}
-                  w="110px"
-                  isRequired
-                  isDisabled={!isEditing}
-                />
-                <NumberField name="devices" label={t('devices.title')} w="100px" isRequired isDisabled={!isEditing} />
-                <NumberField
-                  name="concurrentDevices"
-                  w="100px"
-                  label={t('simulation.concurrent_devices')}
-                  isRequired
-                  isDisabled={!isEditing}
-                />
-              </SimpleGrid>
+              <Wrap>
+                <WrapItem>
+                  <SelectField
+                    name="deviceType"
+                    label={t('common.type')}
+                    options={
+                      (getDeviceTypes.data?.deviceTypes ?? DEVICE_TYPES).map((v) => ({
+                        value: v,
+                        label: v,
+                      })) ?? []
+                    }
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
+                </WrapItem>
+                <WrapItem>
+                  <StringField
+                    name="macPrefix"
+                    label={t('simulation.mac_prefix')}
+                    w="120px"
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
+                </WrapItem>
+                <WrapItem>
+                  <NumberField name="devices" label={t('devices.title')} w="100px" isRequired isDisabled={!isEditing} />
+                </WrapItem>
+                <WrapItem>
+                  <NumberField
+                    name="concurrentDevices"
+                    w="100px"
+                    label={t('simulation.concurrent_devices')}
+                    isRequired
+                    isDisabled={!isEditing}
+                  />
+                </WrapItem>
+              </Wrap>
               <Heading size="sm" mt={4}>
                 {t('configurations.advanced_settings')}
               </Heading>
               <Flex my={2}>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField
                     name="minAssociations"
                     label={t('simulation.min_associations')}
@@ -268,7 +287,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                     isDisabled={!isEditing}
                   />
                 </Box>
-                <Box w="160px">
+                <Box w="170px">
                   <NumberField
                     name="maxAssociations"
                     label={t('simulation.max_associations')}
@@ -278,7 +297,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                 </Box>
               </Flex>
               <Flex my={2}>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField
                     name="minClients"
                     label={t('simulation.min_clients')}
@@ -286,7 +305,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                     isDisabled={!isEditing}
                   />
                 </Box>
-                <Box mr={2} w="160px">
+                <Box mr={2} w="170px">
                   <NumberField
                     name="maxClients"
                     label={t('simulation.max_clients')}
@@ -294,7 +313,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                     isDisabled={!isEditing}
                   />
                 </Box>
-                <Box w="160px">
+                <Box w="170px">
                   <NumberField
                     name="clientInterval"
                     label={t('simulation.client_interval')}
@@ -304,7 +323,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                 </Box>
               </Flex>
               <Flex my={2}>
-                <Box mr={2} w="180px">
+                <Box mr={2} w="190px">
                   <NumberField
                     name="healthCheckInterval"
                     label={t('simulation.healthcheck_interval')}
@@ -322,7 +341,7 @@ const UpdateSimulationModal = ({ modalProps, simulation, onOpenDevicesDelete }: 
                     isDisabled={!isEditing}
                   />
                 </Box>
-                <Box w="160px">
+                <Box w="180px">
                   <NumberField
                     name="reconnectInterval"
                     label={t('simulation.reconnect_interval')}
