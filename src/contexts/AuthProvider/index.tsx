@@ -32,12 +32,17 @@ export const AuthProvider = ({ token, defaultEndpoints, children }: AuthProvider
   const { data: configurationDescriptions } = useGetConfigurationDescriptions({
     enabled: loadedEndpoints && defaultEndpoints === undefined,
   });
+  const [owlsAdminCount, setOwlsAdminCount] = useState(0);
   const { data: user, refetch: refetchUser } = useGetProfile();
   const { refetch: refetchEndpoints } = useGetEndpoints({
     onSuccess: async (newEndpoints: Endpoint[]) => {
       const foundEndpoints: { [key: string]: string } = {};
-      // @ts-ignore
-      const owlsAdmin = await getOwlsAdmin(newEndpoints, axiosSec.defaults.headers.common.Authorization ?? '');
+      const { endpoint: owlsAdmin, owlsAdminCount: owlsCount } = await getOwlsAdmin(
+        newEndpoints,
+        // @ts-ignore
+        axiosSec.defaults.headers.common.Authorization ?? '',
+      );
+      setOwlsAdminCount(owlsCount);
       if (owlsAdmin) {
         axiosOwls.defaults.baseURL = `${owlsAdmin.uri}/api/v1`;
       }
@@ -178,8 +183,19 @@ export const AuthProvider = ({ token, defaultEndpoints, children }: AuthProvider
       endpoints,
       configurationDescriptions,
       isUserLoaded: preferences !== undefined && user !== undefined && loadedEndpoints,
+      owlsAdminCount,
     }),
-    [currentToken, user, avatar, preferences, loadedEndpoints, configurationDescriptions, endpoints, ref],
+    [
+      currentToken,
+      user,
+      avatar,
+      preferences,
+      loadedEndpoints,
+      configurationDescriptions,
+      endpoints,
+      ref,
+      owlsAdminCount,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

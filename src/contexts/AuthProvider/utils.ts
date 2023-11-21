@@ -37,6 +37,7 @@ export interface AuthProviderReturn {
   endpoints: { [key: string]: string } | null;
   configurationDescriptions: Record<string, unknown>;
   isUserLoaded: boolean;
+  owlsAdminCount: number;
 }
 
 export const getOwlsStatus = (endpoint: Endpoint, token: string) =>
@@ -70,6 +71,7 @@ export const useGetOwlStatus = ({
 
 export const getOwlsAdmin = async (endpoints: Endpoint[], token: string) => {
   let owlsTypeCount = 0;
+  let owlsAdminCount = 0;
   let owlsAdmin: Endpoint | undefined;
   for (const endpoint of endpoints) {
     if (endpoint.type === 'owls') {
@@ -79,14 +81,15 @@ export const getOwlsAdmin = async (endpoints: Endpoint[], token: string) => {
 
       if (res && res.master) {
         owlsAdmin = endpoint;
-        break;
+        owlsAdminCount += 1;
       }
     }
   }
 
   if (owlsTypeCount === 1) {
-    return endpoints.find((endpoint) => endpoint.type === 'owls');
+    owlsAdminCount = 1;
+    return { endpoint: endpoints.find((endpoint) => endpoint.type === 'owls'), owlsAdminCount };
   }
 
-  return owlsAdmin;
+  return { endpoint: owlsAdmin, owlsAdminCount };
 };

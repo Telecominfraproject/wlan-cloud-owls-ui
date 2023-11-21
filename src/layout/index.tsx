@@ -3,12 +3,14 @@ import { useBoolean, useColorMode } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
+import AdminOwlsModal from './AdminOwlsModal';
 import { Navbar } from './Navbar';
 import { PageContainer } from './PageContainer';
 import { Sidebar } from './Sidebar';
 import darkLogo from 'assets/Logo_Dark_Mode.svg';
 import lightLogo from 'assets/Logo_Light_Mode.svg';
 import LanguageSwitcher from 'components/LanguageSwitcher';
+import { useAuth } from 'contexts/AuthProvider';
 import { RouteName } from 'models/Routes';
 import NotFoundPage from 'pages/NotFound';
 import routes from 'router/routes';
@@ -19,6 +21,7 @@ const Layout = () => {
   const { colorMode } = useColorMode();
   const [isSidebarOpen, { toggle: toggleSidebar }] = useBoolean(false);
   document.documentElement.dir = 'ltr';
+  const { isUserLoaded, owlsAdminCount } = useAuth();
 
   const activeRoute = React.useMemo(() => {
     let name: RouteName = '';
@@ -72,6 +75,10 @@ const Layout = () => {
 
     return instances;
   }, []);
+
+  if (isUserLoaded && owlsAdminCount !== 1) {
+    return <AdminOwlsModal count={owlsAdminCount} />;
+  }
 
   return (
     <>
