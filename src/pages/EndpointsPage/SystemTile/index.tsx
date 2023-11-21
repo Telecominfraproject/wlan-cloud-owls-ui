@@ -4,14 +4,16 @@ import {
   Button,
   Flex,
   Heading,
+  HStack,
   IconButton,
   SimpleGrid,
   Spacer,
+  Tag,
   Tooltip,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { ArrowsClockwise } from '@phosphor-icons/react';
+import { ArrowsClockwise, ArrowSquareOut } from '@phosphor-icons/react';
 import { MultiValue, Select } from 'chakra-react-select';
 import { useTranslation } from 'react-i18next';
 import { RefreshButton } from '../../../components/Buttons/RefreshButton';
@@ -22,6 +24,7 @@ import { Card } from 'components/Containers/Card';
 import { CardBody } from 'components/Containers/Card/CardBody';
 import { CardHeader } from 'components/Containers/Card/CardHeader';
 import { Modal } from 'components/Modals/Modal';
+import { useGetOwlStatus } from 'contexts/AuthProvider/utils';
 import { compactSecondsToDetailed } from 'helpers/dateFormatting';
 import { EndpointApiResponse } from 'hooks/Network/Endpoints';
 import { useGetSubsystems, useGetSystemInfo, useReloadSubsystems } from 'hooks/Network/System';
@@ -51,6 +54,14 @@ const SystemTile = ({ endpoint, token }: Props) => {
     resetSubs,
     token,
   });
+  const getStatus = useGetOwlStatus({ endpoint, token: `Bearer ${token}`, enabled: endpoint.type === 'owls' });
+  let url = system?.UI;
+
+  if (url && !url.startsWith('http')) {
+    url = `https://${url}`;
+  }
+
+  const openUI = () => window.open(url, '_blank');
 
   const handleReloadClick = () => {
     reloadSubsystems(subs.map((sub) => sub.value));
@@ -64,12 +75,31 @@ const SystemTile = ({ endpoint, token }: Props) => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <Heading pt={0}>{endpoint.type}</Heading>
-          <Spacer />
-          <SystemLoggingButton endpoint={endpoint} token={token} />
-          <RefreshButton onClick={refresh} isFetching={isFetchingSystem || isFetchingSubsystems} />
-        </CardHeader>
+        {
+          // @ts-ignore
+          <CardHeader alignItems="center">
+            <Heading>{endpoint.type}</Heading>
+            {getStatus.data ? (
+              <Tag colorScheme={getStatus.data.master ? 'purple' : 'teal'} size="lg" ml={2} mt={1}>
+                {getStatus.data.master ? 'Primary' : 'Secondary'}
+              </Tag>
+            ) : null}
+            <Spacer />
+            <HStack>
+              <Tooltip label="Go to UI">
+                <IconButton
+                  aria-label="Go to UI"
+                  onClick={openUI}
+                  icon={<ArrowSquareOut size={20} />}
+                  colorScheme="blue"
+                  hidden={url === undefined}
+                />
+              </Tooltip>
+              <SystemLoggingButton endpoint={endpoint} token={token} />
+              <RefreshButton onClick={refresh} isFetching={isFetchingSystem || isFetchingSubsystems} />
+            </HStack>
+          </CardHeader>
+        }
         <CardBody>
           <VStack w="100%">
             <SimpleGrid minChildWidth="500px" w="100%">
