@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { axiosProv } from 'constants/axiosInstances';
 import { SimulationStatus } from 'hooks/Network/Simulations';
+import { User } from 'hooks/Network/Users';
 import { Endpoint } from 'models/Endpoint';
 import { Preference } from 'models/Preference';
-import { User } from 'models/User';
 
 const getConfigDescriptions = async (baseUrl: string) =>
   axios.get(`${baseUrl.split('/api')[0]}/wwwassets/ucentral.schema.pretty.json`).then(({ data }) => data.$defs);
@@ -39,7 +39,7 @@ export interface AuthProviderReturn {
   isUserLoaded: boolean;
 }
 
-const getOwlsStatus = (endpoint: Endpoint, token: string) =>
+export const getOwlsStatus = (endpoint: Endpoint, token: string) =>
   axios
     .get(`${endpoint.uri}/api/v1/owlsSystemConfiguration`, {
       headers: {
@@ -57,6 +57,16 @@ const getOwlsStatus = (endpoint: Endpoint, token: string) =>
         },
     )
     .catch(() => null);
+
+export const useGetOwlStatus = ({
+  endpoint,
+  token,
+  enabled,
+}: {
+  endpoint: Endpoint;
+  token: string;
+  enabled?: boolean;
+}) => useQuery(['owl-status', endpoint, token], () => getOwlsStatus(endpoint, token), { staleTime: Infinity, enabled });
 
 export const getOwlsAdmin = async (endpoints: Endpoint[], token: string) => {
   let owlsTypeCount = 0;
