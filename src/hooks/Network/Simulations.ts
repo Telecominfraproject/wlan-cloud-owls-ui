@@ -130,7 +130,8 @@ const getSimulationsStatus = async () =>
 export const useGetSimulationsStatus = () =>
   useQuery(['simulations', 'status'], getSimulationsStatus, {
     keepPreviousData: true,
-    staleTime: Infinity,
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 10,
   });
 
 const getSimulationStatus = async (context: QueryFunctionContext<[string, string, string]>) =>
