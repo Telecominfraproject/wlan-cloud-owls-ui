@@ -21,7 +21,7 @@ export const SimulationSchema = (t: (str: string) => string, defaultType?: strin
     clientInterval: Yup.number().required(t('form.required')).moreThan(0).lessThan(61).integer().default(1),
     reconnectInterval: Yup.number().required(t('form.required')).moreThan(9).lessThan(301).integer().default(30),
     keepAlive: Yup.number().required(t('form.required')).moreThan(119).lessThan(3001).integer().default(300),
-    devices: Yup.number().required(t('form.required')).moreThan(0).lessThan(50001).integer().default(10),
+    devices: Yup.number().required(t('form.required')).moreThan(0).default(10),
     concurrentDevices: Yup.number().required(t('form.required')).moreThan(0).lessThan(1001).integer().default(5),
     deviceType: Yup.string()
       .required(t('form.required'))
