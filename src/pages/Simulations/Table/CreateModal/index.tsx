@@ -98,7 +98,7 @@ const CreateSimulationModal = () => {
                   <StringField name="macPrefix" label={t('simulation.mac_prefix')} w="120px" isRequired />
                 </WrapItem>
                 <WrapItem>
-                  <NumberField name="devices" label={t('devices.title')} w="100px" isRequired />
+                  <NumberField name="devices" label={t('devices.title')} w="140px" isRequired />
                 </WrapItem>
                 <WrapItem>
                   <NumberField

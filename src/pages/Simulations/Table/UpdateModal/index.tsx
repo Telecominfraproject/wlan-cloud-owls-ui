@@ -263,7 +263,7 @@ const UpdateSimulationModal = ({ modalProps, simulation }: Props) => {
                   />
                 </WrapItem>
                 <WrapItem>
-                  <NumberField name="devices" label={t('devices.title')} w="100px" isRequired isDisabled={!isEditing} />
+                  <NumberField name="devices" label={t('devices.title')} w="140px" isRequired isDisabled={!isEditing} />
                 </WrapItem>
                 <WrapItem>
                   <NumberField
