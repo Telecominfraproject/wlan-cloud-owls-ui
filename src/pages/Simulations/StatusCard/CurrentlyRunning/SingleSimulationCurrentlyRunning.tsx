@@ -1,22 +1,30 @@
 import * as React from 'react';
 import { Box, Button, Center, Flex, Heading, SimpleGrid, Spacer, Spinner, Text, Tooltip } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
-import MessagesChart from './MessagesChart';
+import MessagesChart from './DevicesChart';
 import TxRxChart from './TxRxChart';
 import FormattedDate from 'components/InformationDisplays/FormattedDate';
 import { useSimulatorStore } from 'contexts/SimulatorSocketProvider/useStore';
 import { bytesString } from 'helpers/stringHelper';
-import { SimulationStatus } from 'hooks/Network/Simulations';
+import { Simulation, SimulationStatus } from 'hooks/Network/Simulations';
 
 type Props = {
   status: SimulationStatus;
+  simulation?: Simulation;
   onStop: (id: string, simulationId: string) => void;
   isStopLoading: boolean;
   onCancel: (id: string, simulationId: string) => void;
   isCancelLoading: boolean;
 };
 
-const SingleSimulationCurrentlyRunning = ({ status, onStop, isStopLoading, onCancel, isCancelLoading }: Props) => {
+const SingleSimulationCurrentlyRunning = ({
+  status,
+  simulation,
+  onStop,
+  isStopLoading,
+  onCancel,
+  isCancelLoading,
+}: Props) => {
   const { t } = useTranslation();
   const currentStatus = useSimulatorStore(
     React.useCallback((state) => state.currentSimulationsData[status.id] ?? [], [status.id]),
@@ -57,7 +65,7 @@ const SingleSimulationCurrentlyRunning = ({ status, onStop, isStopLoading, onCan
             </Box>
             <Box>
               <Heading size="sm" my="auto">
-                {t('simulation.time_to_full')}
+                Time to Completion
               </Heading>
               <Text>
                 {latestStatus.timeToFullDevices} {t('common.seconds')}
@@ -65,9 +73,12 @@ const SingleSimulationCurrentlyRunning = ({ status, onStop, isStopLoading, onCan
             </Box>
             <Box>
               <Heading size="sm" my="auto">
-                {t('simulation.current_live_devices')}
+                Current Devices
               </Heading>
-              <Text>{latestStatus.liveDevices}</Text>
+              <Text>
+                {latestStatus.liveDevices} (
+                {simulation ? Math.round((latestStatus.liveDevices / simulation.devices) * 100) : '-'}%)
+              </Text>
             </Box>
             <Box>
               <Heading size="sm" my="auto">
@@ -113,7 +124,7 @@ const SingleSimulationCurrentlyRunning = ({ status, onStop, isStopLoading, onCan
             <TxRxChart statusId={status.id} />
           </Box>
           <Heading mt={4} mb={0} size="sm" textDecor="underline">
-            {t('simulation.realtime_messages')}
+            Current Devices
           </Heading>
           <Box h="calc(20vh)" w="100%">
             <MessagesChart statusId={status.id} />

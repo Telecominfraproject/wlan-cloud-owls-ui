@@ -138,6 +138,7 @@ const CurrentlyRunningCard = ({ currentlyRunningStatus }: Props) => {
                       <TabPanel key={status.id}>
                         <SingleSimulationCurrentlyRunning
                           status={status}
+                          simulation={getSims.data?.list.find((sim) => sim.id === status.simulationId)}
                           onStop={handleStopClick}
                           isStopLoading={stopSim.isLoading}
                           onCancel={handleCancelClick}
