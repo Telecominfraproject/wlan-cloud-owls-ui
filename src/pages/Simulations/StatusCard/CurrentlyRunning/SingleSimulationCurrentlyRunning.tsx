@@ -28,7 +28,6 @@ const SingleSimulationCurrentlyRunning = ({
   const { t } = useTranslation();
   const currentStatus = useSimulatorStore(
     React.useCallback((state) => state.currentSimulationsData[status.id] ?? [], [status.id]),
-    (oldState, newState) => oldState?.length === newState?.length,
   );
   const latestStatus = currentStatus?.[currentStatus.length - 1]?.rawData ?? status;
 
@@ -55,7 +54,7 @@ const SingleSimulationCurrentlyRunning = ({
               <Heading size="sm" my="auto">
                 {t('common.started')}
               </Heading>
-              <FormattedDate key={currentStatus.length} date={latestStatus.startTime} />
+              <FormattedDate key={JSON.stringify(status)} date={latestStatus.startTime} />
             </Box>
             <Box>
               <Heading size="sm" my="auto">

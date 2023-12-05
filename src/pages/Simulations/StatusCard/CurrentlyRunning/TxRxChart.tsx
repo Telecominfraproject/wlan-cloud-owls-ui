@@ -42,7 +42,6 @@ const TxRxChart = ({ statusId }: Props) => {
   const { colorMode } = useColorMode();
   const currentSimulationData = useSimulatorStore(
     React.useCallback((state) => state.currentSimulationsData[statusId] ?? [], [statusId]),
-    (oldState, newState) => oldState?.length === newState?.length,
   );
 
   const { data, unit } = React.useMemo(() => {
