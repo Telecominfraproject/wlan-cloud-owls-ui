@@ -1,3 +1,4 @@
+import ReconnectingWebSocket from 'reconnecting-websocket';
 import create from 'zustand';
 import { SocketEventCallback, WebSocketNotification } from './utils';
 import { axiosOwls } from 'constants/axiosInstances';
@@ -32,12 +33,9 @@ export type SimulatorStoreState = {
   addMessage: (message: WebSocketNotification) => void;
   eventListeners: SocketEventCallback[];
   addEventListeners: (callback: SocketEventCallback[]) => void;
-  webSocket?: WebSocket;
-  websocketTimer: NodeJS.Timeout | null;
+  webSocket?: ReconnectingWebSocket;
   send: (str: string) => void;
   startWebSocket: (token: string, tries?: number) => void;
-  isWebSocketOpen: boolean;
-  setWebSocketOpen: (isOpen: boolean) => void;
   currentSimulationsData: Record<string, SimulationOperationStatus[]>;
 };
 
@@ -128,38 +126,47 @@ export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
   eventListeners: [] as SocketEventCallback[],
   addEventListeners: (events: SocketEventCallback[]) =>
     set((state) => ({ eventListeners: [...state.eventListeners, ...events] })),
-  isWebSocketOpen: false,
-  setWebSocketOpen: (isOpen: boolean) => set({ isWebSocketOpen: isOpen }),
   send: (str: string) => {
     const ws = get().webSocket;
     if (ws) ws.send(str);
   },
-  websocketTimer: null,
   startWebSocket: (token: string) => {
-    set({
-      webSocket: new WebSocket(
-        `${
-          axiosOwls?.defaults?.baseURL ? axiosOwls.defaults.baseURL.replace('https', 'wss').replace('http', 'ws') : ''
-        }/ws`,
-      ),
-    });
     const ws = get().webSocket;
+
     if (ws) {
-      ws.onopen = () => {
-        const timer = get().websocketTimer;
-        if (timer) clearTimeout(timer);
-        set({ isWebSocketOpen: true, websocketTimer: null });
-        ws.send(`token:${token}`);
-      };
-      ws.onclose = () => {
-        const timer = get().websocketTimer;
-        if (timer) clearTimeout(timer);
-        set({
-          isWebSocketOpen: false,
-          websocketTimer: setInterval(() => get().startWebSocket(token), 60 * 1000),
-        });
-      };
+      // Close the previous websocket connection and remove it
+      ws.close();
+      set({ webSocket: undefined });
     }
+
+    const newWs = new ReconnectingWebSocket(
+      `${
+        axiosOwls?.defaults?.baseURL ? axiosOwls.defaults.baseURL.replace('https', 'wss').replace('http', 'ws') : ''
+      }/ws`,
+      undefined,
+      {
+        startClosed: true,
+      },
+    );
+    newWs.removeEventListener('open', (e) => {
+      e.target?.send(`token:${token}`);
+    });
+    newWs.addEventListener('open', (e) => {
+      e.target?.send(`token:${token}`);
+    });
+    newWs.reconnect();
+
+    set({
+      webSocket: newWs,
+    });
+
+    // Add global event listener, on window focus, call startWebSocket
+    window.removeEventListener('focus', () => {
+      get().startWebSocket(token);
+    });
+    window.addEventListener('focus', () => {
+      get().startWebSocket(token);
+    });
   },
   currentSimulationsData: {},
 }));

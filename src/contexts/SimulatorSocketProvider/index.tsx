@@ -33,10 +33,9 @@ const SimulatorSocketContext = React.createContext<SimulatorSocketContextReturn>
 
 export const SimulatorSocketProvider = ({ children }: { children: React.ReactElement }) => {
   const { token, isUserLoaded } = useAuth();
-  const { addMessage, isOpen, setIsOpen, webSocket, onStartWebSocket } = useSimulatorStore((state) => ({
+  const { addMessage, webSocket, onStartWebSocket } = useSimulatorStore((state) => ({
     addMessage: state.addMessage,
-    setIsOpen: state.setWebSocketOpen,
-    isOpen: state.isWebSocketOpen,
+    isOpen: state.webSocket?.readyState === WebSocket.OPEN,
     webSocket: state.webSocket,
     onStartWebSocket: state.startWebSocket,
   }));
@@ -64,9 +63,6 @@ export const SimulatorSocketProvider = ({ children }: { children: React.ReactEle
     if (isUserLoaded && axiosOwls?.defaults?.baseURL !== axiosSec?.defaults?.baseURL) {
       onStartWebSocket(token ?? '');
     }
-
-    const wsCurrent = webSocket;
-    return () => wsCurrent?.close();
   }, [isUserLoaded]);
 
   // useEffect for generating global notifications
@@ -79,33 +75,6 @@ export const SimulatorSocketProvider = ({ children }: { children: React.ReactEle
       if (webSocket) webSocket.removeEventListener('message', onMessage);
     };
   }, [webSocket]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      let timeoutId;
-
-      if (webSocket) {
-        if (document.visibilityState === 'hidden') {
-          timeoutId = setTimeout(() => {
-            if (webSocket) webSocket.onclose = () => {};
-            webSocket?.close();
-            setIsOpen(false);
-          }, 5000);
-        } else {
-          clearTimeout(timeoutId);
-
-          if (!isOpen && isUserLoaded && axiosOwls?.defaults?.baseURL !== axiosSec?.defaults?.baseURL) {
-            onStartWebSocket(token ?? '');
-          }
-        }
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [webSocket, isOpen]);
 
   const values: SimulatorSocketContextReturn = useMemo(() => ({}), []);
 
